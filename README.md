@@ -19,6 +19,8 @@ Power Manager monitors your **grid consumption (W)** and applies a priority chai
 
 It also performs a **safe sequential restore** when the situation is stable again.
 
+<img width="1847" height="910" alt="Immagine 2026-02-14 170413" src="https://github.com/user-attachments/assets/970d44d2-fed7-467c-bcd6-5afc4ba05afd" />
+
 ---
 
 ## 🧾 Open Meter (GEMIS) thresholds (example: 3 kW contract)
@@ -79,6 +81,10 @@ Power Manager anticipates these behaviors by shedding loads before the meter tri
   - Runtime settings (contract power, hysteresis, restore interval, etc.)
   - Device entity configuration (switch/power sensor) and enable toggles
   - DND windows for Alexa
+
+
+
+https://github.com/user-attachments/assets/4ff4b376-e4f2-4d2a-ab7c-7aaa916512fc
 
 ---
 
