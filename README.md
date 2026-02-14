@@ -23,7 +23,7 @@ It also performs a **safe sequential restore** when the situation is stable agai
 
 ---
 
-## 🧾 Open Meter (GEMIS) thresholds (example: 3 kW contract)
+## 🧾 Open Meter (E-Distribuzione / GEMIS) thresholds (example: 3 kW contract)
 
 | Zone | Power | Meter behavior | Time |
 |------|------:|----------------|------|
