@@ -1,0 +1,1936 @@
+type: sections
+max_columns: 3
+title: Power Manager
+path: power-manager
+icon: mdi:flash-alert
+theme: ios-dark-mode-blue-red
+dense_section_placement: true
+sections:
+  - type: grid
+    column_span: 4
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: POWER MANAGER
+            subtitle: ""
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg,
+                    rgba(15, 15, 28, 0.97) 0%,
+                    rgba(22, 30, 48, 0.95) 50%,
+                    rgba(15, 22, 40, 0.97) 100%);
+                  border: 1px solid rgba(255, 170, 0, 0.2);
+                  border-radius: 24px;
+                  padding: 18px 24px 14px 24px;
+                  position: relative;
+                  overflow: hidden;
+                }
+                ha-card .header,
+                ha-card .container {
+                  padding: 0 !important;
+                  margin: 0 !important;
+                }
+                ha-card .title {
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  font-size: 28px !important;
+                  font-weight: 700 !important;
+                  line-height: 1.1 !important;
+                  display: inline-flex !important;
+                  align-items: center !important;
+                  gap: 10px !important;
+                  width: max-content;
+                  background: linear-gradient(90deg, #ffab00, #ff6d00, #ffab00);
+                  background-size: 200% auto;
+                  background-position: 0% center;
+                  -webkit-background-clip: text;
+                  -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite;
+                  pointer-events: none;
+                }
+                ha-card .title::before {
+                  content: "⚡";
+                  font-size: 26px;
+                  line-height: 1;
+                  -webkit-text-fill-color: #ffab00;
+                  background: none !important;
+                  filter: drop-shadow(0 0 5px rgba(255, 170, 0, 0.55));
+                }
+                ha-card .subtitle { display: none !important; }
+                ha-card::after {
+                  content: "";
+                  display: block;
+                  width: 100%;
+                  height: 4px;
+                  margin-top: 12px;
+                  border-radius: 999px;
+                  background-image:
+                    linear-gradient(90deg, rgba(255,170,0,0.20), rgba(255,109,0,0.20)),
+                    linear-gradient(90deg,
+                      transparent 0%,
+                      rgba(255,170,0,0.00) 18%,
+                      rgba(255,170,0,0.70) 40%,
+                      rgba(255,109,0,0.85) 47%,
+                      rgba(255,255,255,1.00) 50%,
+                      rgba(255,109,0,0.85) 53%,
+                      rgba(255,170,0,0.70) 60%,
+                      rgba(255,170,0,0.00) 82%,
+                      transparent 100%),
+                    radial-gradient(circle,
+                      rgba(255,255,255,1.00) 0%,
+                      rgba(255,255,255,0.55) 35%,
+                      rgba(255,170,0,0.22) 58%,
+                      transparent 75%);
+                  background-size: 100% 100%, 200% 100%, 18px 18px;
+                  background-repeat: no-repeat;
+                  background-position: 0% 0, 110% 0, -12px 50%;
+                  animation: sweep-main 2.2s ease-in-out infinite alternate;
+                  will-change: background-position, opacity;
+                  box-shadow:
+                    0 0 8px rgba(255,170,0,0.35),
+                    0 0 16px rgba(255,109,0,0.22);
+                  filter:
+                    drop-shadow(0 0 6px rgba(255,255,255,0.18))
+                    drop-shadow(0 0 10px rgba(255,170,0,0.14));
+                  pointer-events: none;
+                }
+                @keyframes shine { to { background-position: 200% center; } }
+                @keyframes sweep-main {
+                  0%   { background-position: 0% 0, 110% 0, -12px 50%; opacity: 0.65; }
+                  50%  { opacity: 1; }
+                  100% { background-position: 0% 0, -10% 0, calc(100% + 12px) 50%; opacity: 0.65; }
+                }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {% set zone = states('sensor.power_manager_zone') %} {% if
+                  zone == 'red' %}ZONA ROSSA {% elif zone == 'yellow' %}ZONA
+                  GIALLA {% else %}ZONA VERDE{% endif %}
+                secondary: >-
+                  {% set zone = states('sensor.power_manager_zone') %} {% set
+                  shed = state_attr('sensor.power_manager_zone', 'shed_active')
+                  %} {% set restore = state_attr('sensor.power_manager_zone',
+                  'restore_in_progress') %} {% set check =
+                  state_attr('sensor.power_manager_zone', 'current_check') %} {%
+                  set shed_devs = state_attr('sensor.power_manager_zone',
+                  'shed_devices') | default([], true) %} {% if zone == 'red' and
+                  shed %}Emerg. · {{ shed_devs | length }} off {% elif zone ==
+                  'red' %}Emergenza {% elif zone == 'yellow' and shed %}Shed ·
+                  {{ shed_devs | length }} off {% elif zone == 'yellow' %}Check
+                  {{ check | default('1') }} · Supero {% elif restore
+                  %}Restore... {% else %}Monitoraggio{% endif %}
+                icon: >-
+                  {% set zone = states('sensor.power_manager_zone') %} {% set
+                  shed = state_attr('sensor.power_manager_zone', 'shed_active')
+                  %} {% if shed %}mdi:lightning-bolt-circle {% elif zone ==
+                  'red' %}mdi:alert-octagon {% elif zone == 'yellow' %}mdi:alert
+                  {% else %}mdi:shield-check{% endif %}
+                color: >-
+                  {% set zone = states('sensor.power_manager_zone') %} {% if
+                  zone == 'red' %}red {% elif zone == 'yellow' %}amber {% else
+                  %}green{% endif %}
+                vertical: true
+                features_position: bottom
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% set zone = states('sensor.power_manager_zone') %}
+                      {% set shed = state_attr('sensor.power_manager_zone', 'shed_active') %}
+                      {% set restore = state_attr('sensor.power_manager_zone', 'restore_in_progress') %}
+
+                      {% if zone == 'red' %}
+                        --pulse-color: 244,67,54;
+                        border: 2px solid rgba(244,67,54,0.8);
+                        animation: pulse-card 1.2s ease-in-out infinite;
+                      {% elif zone == 'yellow' and shed %}
+                        --pulse-color: 255,152,0;
+                        border: 2px solid rgba(255,152,0,0.8);
+                        animation: pulse-card 1.5s ease-in-out infinite;
+                      {% elif zone == 'yellow' %}
+                        --pulse-color: 255,193,7;
+                        border: 2px solid rgba(255,193,7,0.7);
+                        animation: pulse-card 2s ease-in-out infinite;
+                      {% elif restore %}
+                        --pulse-color: 33,150,243;
+                        border: 2px solid rgba(33,150,243,0.7);
+                        animation: pulse-card 2.5s ease-in-out infinite;
+                      {% else %}
+                        --pulse-color: 0,200,83;
+                        border: 1px solid rgba(0,200,83,0.35);
+                      {% endif %}
+
+                      background: linear-gradient(
+                        145deg,
+                        rgba(var(--pulse-color), 0.10) 0%,
+                        rgba(var(--pulse-color), 0.02) 100%
+                      );
+                      border-radius: 20px;
+                      backdrop-filter: blur(12px);
+                      --icon-size: 48px;
+                      position: relative;
+                      overflow: hidden;
+                    }
+
+                    mushroom-shape-icon {
+                      {% set zone = states('sensor.power_manager_zone') %}
+                      {% if zone == 'red' %}
+                        filter: drop-shadow(0 0 10px rgba(244,67,54,0.7)) drop-shadow(0 0 25px rgba(244,67,54,0.4));
+                      {% elif zone == 'yellow' %}
+                        filter: drop-shadow(0 0 8px rgba(255,193,7,0.6)) drop-shadow(0 0 20px rgba(255,193,7,0.3));
+                      {% else %}
+                        filter: drop-shadow(0 0 8px rgba(0,200,83,0.6)) drop-shadow(0 0 20px rgba(0,200,83,0.3));
+                      {% endif %}
+                    }
+
+                    .primary {
+                      font-size: 17px !important;
+                      font-weight: 800 !important;
+                      letter-spacing: 0.5px;
+                      text-transform: uppercase;
+                    }
+                    .secondary {
+                      font-size: 11px !important;
+                      font-weight: 500 !important;
+                      opacity: 0.85;
+                      letter-spacing: 0.3px;
+                    }
+
+                    ha-card::after {
+                      content: "";
+                      position: absolute;
+                      bottom: 0; left: 0; right: 0;
+                      height: 3px;
+                      border-radius: 0 0 20px 20px;
+                      background: linear-gradient(
+                        90deg,
+                        transparent 0%,
+                        rgba(var(--pulse-color), 0.0) 15%,
+                        rgba(var(--pulse-color), 0.8) 40%,
+                        rgba(var(--pulse-color), 1.0) 50%,
+                        rgba(var(--pulse-color), 0.8) 60%,
+                        rgba(var(--pulse-color), 0.0) 85%,
+                        transparent 100%
+                      );
+                      background-size: 200% 100%;
+                      animation: sweep-bar 2.5s ease-in-out infinite alternate;
+                    }
+
+                    @keyframes pulse-card {
+                      0%, 100% {
+                        box-shadow:
+                          0 0 10px rgba(var(--pulse-color), 0.15),
+                          0 0 30px rgba(var(--pulse-color), 0.08);
+                      }
+                      50% {
+                        box-shadow:
+                          0 0 18px rgba(var(--pulse-color), 0.35),
+                          0 0 45px rgba(var(--pulse-color), 0.15);
+                      }
+                    }
+
+                    @keyframes sweep-bar {
+                      0%   { background-position: 120% 0; }
+                      100% { background-position: -20% 0; }
+                    }
+              - type: custom:mushroom-template-card
+                primary: "{{ states('sensor.YOUR_GRID_POWER_SENSOR') | float(0) | round(0) }} W"
+                secondary: Prelievo rete
+                icon: mdi:transmission-tower-import
+                icon_color: >-
+                  {% set p = states('sensor.YOUR_GRID_POWER_SENSOR') | float(0) %} {%
+                  set cp = states('input_number.pm_contract_power') |
+                  float(4500) %} {% if p >= cp * 1.33 %}red {% elif p >= cp *
+                  1.1 %}amber {% else %}green{% endif %}
+                layout: vertical
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: linear-gradient(145deg, rgba(255,100,50,0.18), rgba(200,50,0,0.12));
+                      border: 1px solid rgba(255,100,50,0.3);
+                      border-radius: 20px;
+                      backdrop-filter: blur(10px);
+                      --icon-size: 42px;
+                    }
+                    .primary {
+                      font-size: 28px !important;
+                      font-weight: 700 !important;
+                      color: #ff6b35 !important;
+                    }
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {% set pct = state_attr('sensor.power_manager_zone',
+                  'excess_percent') | float(0) %} {% if pct > 0 %}+{{ pct |
+                  round(0) }}%{% else %}0%{% endif %}
+                secondary: Supero
+                icon: mdi:percent
+                icon_color: >-
+                  {% set pct = state_attr('sensor.power_manager_zone',
+                  'excess_percent') | float(0) %} {% if pct >= 33 %}red{% elif
+                  pct > 0 %}amber{% else %}green{% endif %}
+                layout: vertical
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: linear-gradient(145deg, rgba(255,200,0,0.18), rgba(200,150,0,0.12));
+                      border: 1px solid rgba(255,200,0,0.3);
+                      border-radius: 20px;
+                      backdrop-filter: blur(10px);
+                      --icon-size: 42px;
+                    }
+                    .primary {
+                      font-size: 32px !important;
+                      font-weight: 700 !important;
+                      {% set pct = state_attr('sensor.power_manager_zone', 'excess_percent') | float(0) %}
+                      {% if pct >= 33 %}
+                      background: linear-gradient(180deg, #ff5252, #d32f2f);
+                      {% elif pct > 0 %}
+                      background: linear-gradient(180deg, #ffc107, #ff8f00);
+                      {% else %}
+                      background: linear-gradient(180deg, #00ff88, #00cc66);
+                      {% endif %}
+                      -webkit-background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                    }
+              - type: custom:mushroom-template-card
+                primary: "{{ states('sensor.pm_elapsed_time') | default('--:--') }}"
+                secondary: >-
+                  {% set zone = states('sensor.power_manager_zone') %} {% if
+                  zone == 'red' %}In zona rossa {% elif zone == 'yellow' %}In
+                  supero {% else %}Tempo zona{% endif %}
+                icon: mdi:timer-outline
+                color: >-
+                  {% set zone = states('sensor.power_manager_zone') %} {% if
+                  zone == 'red' %}red{% elif zone == 'yellow' %}amber{% else
+                  %}cyan{% endif %}
+                vertical: true
+                features_position: bottom
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: linear-gradient(145deg, rgba(0,200,255,0.18), rgba(0,100,150,0.12));
+                      border: 1px solid rgba(0,200,255,0.3);
+                      border-radius: 20px;
+                      backdrop-filter: blur(10px);
+                      --icon-size: 42px;
+                    }
+                    .primary {
+                      font-size: 28px !important;
+                      font-weight: 700 !important;
+                      color: #00d4ff !important;
+                    }
+        grid_options:
+          columns: full
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              box-shadow: none !important;
+            }
+  - type: grid
+    column_span: 1
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: STATO & TIMER
+            subtitle: ""
+            card_mod:
+              style: >
+                ha-card {
+                  background: linear-gradient(135deg, rgba(20,20,35,0.95) 0%, rgba(30,40,60,0.90) 50%, rgba(20,30,50,0.95) 100%);
+                  border: 1px solid rgba(255,170,0,0.22);
+                  border-radius: 24px;
+                  padding: 18px 24px 14px 24px;
+                  position: relative;
+                  overflow: hidden;
+                }
+
+                ha-card .title {
+                  margin: 0 !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.1;
+                  display: inline-flex; align-items: center; gap: 10px;
+                  background: linear-gradient(90deg, #ffab00, #ffd54f, #ffab00);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite;
+                }
+
+                ha-card .title::before { content: "🎯"; font-size: 20px;
+                line-height: 1; -webkit-text-fill-color: #ffab00; background:
+                none !important; filter: drop-shadow(0 0 5px
+                rgba(255,170,0,0.45)); }
+
+                ha-card .subtitle { display: none !important; }
+
+                ha-card::after { content: ""; display: block; width: 100%;
+                height: 4px; margin-top: 12px; border-radius: 999px;
+                background-image: linear-gradient(90deg, rgba(255,170,0,0.20),
+                rgba(255,213,79,0.20)), linear-gradient(90deg, transparent 0%,
+                rgba(255,170,0,0.00) 18%, rgba(255,170,0,0.70) 40%,
+                rgba(255,213,79,0.85) 47%, rgba(255,255,255,1.00) 50%,
+                rgba(255,213,79,0.85) 53%, rgba(255,170,0,0.70) 60%,
+                rgba(255,170,0,0.00) 82%, transparent 100%),
+                radial-gradient(circle, rgba(255,255,255,1.00) 0%,
+                rgba(255,255,255,0.55) 35%, rgba(255,170,0,0.22) 58%,
+                transparent 75%); background-size: 100% 100%, 200% 100%, 18px
+                18px; background-repeat: no-repeat; background-position: 0% 0,
+                110% 0, -12px 50%; animation: sweep-main 2.2s ease-in-out
+                infinite alternate; box-shadow: 0 0 8px rgba(255,170,0,0.30), 0
+                0 16px rgba(255,213,79,0.18); pointer-events: none; }
+
+                @keyframes shine { to { background-position: 200% center; } }
+
+                @keyframes sweep-main { 0% { background-position: 0% 0, 110% 0,
+                -12px 50%; opacity: 0.65; } 50% { opacity: 1; } 100% {
+                background-position: 0% 0, -10% 0, calc(100% + 12px) 50%;
+                opacity: 0.65; } }
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                icon: mdi:shield-check
+                icon_color: >-
+                  {% if state_attr('sensor.power_manager_zone', 'shed_active')
+                  %}amber{% else %}green{% endif %}
+                content: >-
+                  {% if state_attr('sensor.power_manager_zone', 'shed_active')
+                  %}Shed attivo{% else %}Nessuno shed{% endif %}
+              - type: template
+                icon: mdi:refresh
+                icon_color: >-
+                  {% if state_attr('sensor.power_manager_zone',
+                  'restore_in_progress') %}cyan{% else %}disabled{% endif %}
+                content: >-
+                  {% if state_attr('sensor.power_manager_zone',
+                  'restore_in_progress') %}Restore...{% else %}—{% endif %}
+              - type: template
+                icon: mdi:test-tube
+                icon_color: >-
+                  {% if state_attr('sensor.power_manager_zone', 'test_mode')
+                  %}pink{% else %}disabled{% endif %}
+                content: >-
+                  {% if state_attr('sensor.power_manager_zone', 'test_mode')
+                  %}TEST{% else %}—{% endif %}
+            alignment: center
+          - type: custom:gauge-card-pro
+            entity: sensor.YOUR_GRID_POWER_SENSOR
+            min: 0
+            max: 8000
+            needle: true
+            needle_color: "#ffffff"
+            gradient: true
+            gradient_resolution: medium
+            round: medium
+            segments:
+              - from: 0
+                color: "#00e676"
+              - from: 2000
+                color: "#66bb6a"
+              - from: 3500
+                color: "#ffd600"
+              - from: 4500
+                color: "#ffab00"
+              - from: 4950
+                color: "#ff6d00"
+              - from: 5500
+                color: "#ff3d00"
+              - from: 5985
+                color: "#d50000"
+              - from: 7000
+                color: "#b71c1c"
+            setpoint:
+              type: template
+              value: >-
+                {{ states('input_number.pm_contract_power') | float(4500) * 1.1
+                }}
+              color: "#ffab00"
+              label: true
+              precision: 0
+            inner:
+              mode: severity
+              gradient: true
+              round: medium
+              value: "{{ states('sensor.YOUR_GRID_POWER_SENSOR') | float(0) }}"
+              segments:
+                - from: 0
+                  color: rgba(0,230,118,0.4)
+                - from: 4950
+                  color: rgba(255,170,0,0.4)
+                - from: 5985
+                  color: rgba(213,0,0,0.4)
+            value_texts:
+              primary: >-
+                {{ states('sensor.YOUR_GRID_POWER_SENSOR') | float(0) | round(0) | int
+                }}
+              primary_color: >-
+                {% set p = states('sensor.YOUR_GRID_POWER_SENSOR') | float(0) %} {% if p
+                >= 5985 %}#ff5252 {% elif p >= 4950 %}#ffab00 {% else
+                %}#00e676{% endif %}
+              primary_unit: W
+              secondary: ""
+            titles:
+              primary: Prelievo rete
+              primary_color: rgba(255,255,255,0.85)
+              primary_font_size: 14px
+              secondary: >-
+                {% set zone = states('sensor.power_manager_zone') %} {% if zone
+                == 'red' %}🔴 ZONA ROSSA {% elif zone == 'yellow' %}🟡 ZONA
+                GIALLA {% else %}{% endif %}
+              secondary_color: >-
+                {% set zone = states('sensor.power_manager_zone') %} {% if zone
+                == 'red' %}#ff5252 {% elif zone == 'yellow' %}#ffab00 {% else
+                %}transparent{% endif %}
+              secondary_font_size: 13px
+            hide_background: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
+                  border: 1px solid rgba(255,255,255,0.1);
+                  border-radius: 20px;
+                  padding: 12px;
+                }
+                * {
+                  --main-needle-stroke-width: 1.5px;
+                  --main-needle-stroke-color: rgba(255,255,255,0.6);
+                  --main-setpoint-needle-stroke-color: rgba(255,170,0,0.8);
+                  --main-setpoint-needle-stroke-width: 1px;
+                }
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: timer.pm_distacco_countdown
+                state: active
+            card:
+              type: custom:mushroom-template-card
+              entity: timer.pm_distacco_countdown
+              primary: >-
+                {% set f = state_attr('timer.pm_distacco_countdown',
+                'finishes_at') %} {% if f %}{% set remaining = as_timestamp(f) -
+                now().timestamp() %}{% set m = (remaining / 60) | int %}{% set s
+                = (remaining % 60) | int %}{{ '%02d' % m }}:{{ '%02d' % s }}{%
+                else %}--:--{% endif %}
+              secondary: >-
+                {% if state_attr('sensor.power_manager_zone',
+                'came_from_yellow') %}⚠️ DISTACCO in 4 min (da gialla){% else
+                %}⚠️ COUNTDOWN AL DISTACCO{% endif %}
+              icon: mdi:timer-alert
+              icon_color: red
+              layout: horizontal
+              card_mod:
+                style: >
+                  ha-card {
+                    background: radial-gradient(circle at center, rgba(244,67,54,0.25) 0%, rgba(244,67,54,0.05) 70%);
+                    border: 2px solid rgba(244,67,54,0.8);
+                    border-radius: 16px;
+                    box-shadow: 0 0 20px rgba(244,67,54,0.4);
+                    animation: pulse-red 1.2s infinite;
+                  }
+
+                  .primary { font-size: 36px !important; font-weight: 800
+                  !important; color: #ff5252 !important; }
+
+                  @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 10px
+                  rgba(244,67,54,0.4); } 50% { box-shadow: 0 0 30px
+                  rgba(244,67,54,0.8); } }
+          - type: custom:mushroom-template-card
+            primary: >-
+              {% set zone = states('sensor.power_manager_zone') %} {% set
+              elapsed_sec = state_attr('sensor.pm_elapsed_time',
+              'elapsed_seconds') | int(0) %} {% if zone == 'yellow' %}{% if
+              elapsed_sec < 180 %}Prossimo: 2° check a 03:00{% elif elapsed_sec
+              < 3600 %}Prossimo: 3° check (shed) a 60:00{% elif elapsed_sec <
+              9000 %}Prossimo: 4° check (safety) a 150:00{% else %}⚠️ Distacco a
+              182:00{% endif %}{% elif zone == 'red' %}{% if
+              state_attr('sensor.power_manager_zone', 'came_from_yellow') %}Da
+              gialla → 4 min al distacco{% else %}Ingresso diretto → 2 min{%
+              endif %}{% else %}Nessun supero{% endif %}
+            secondary: >-
+              Rete: {{ states('sensor.YOUR_GRID_POWER_SENSOR') | float(0) | round(0) }}W
+              / Contratto: {{ states('input_number.pm_contract_power') |
+              float(4500) | round(0) }}W
+            icon: mdi:information-outline
+            icon_color: >-
+              {% set zone = states('sensor.power_manager_zone') %} {% if zone ==
+              'red' %}red{% elif zone == 'yellow' %}amber{% else %}teal{% endif
+              %}
+            card_mod:
+              style: >
+                ha-card { background: linear-gradient(180deg,
+                rgba(0,150,136,0.12) 0%, rgba(0,150,136,0.02) 100%); border: 1px
+                solid rgba(0,150,136,0.3); border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: >-
+              {% set shed = state_attr('sensor.power_manager_zone',
+              'shed_devices') %} {% if shed and shed | length > 0 %}{{ shed |
+              join(', ') }}{% else %}Nessuno{% endif %}
+            secondary: Dispositivi spenti dal PM
+            icon: mdi:power-plug-off
+            color: >-
+              {% set shed = state_attr('sensor.power_manager_zone',
+              'shed_devices') %} {% if shed and shed | length > 0 %}red{% else
+              %}disabled{% endif %}
+            features_position: bottom
+            card_mod:
+              style: >
+                ha-card { background: rgba(244,67,54,0.08); border: 1px solid
+                rgba(244,67,54,0.25); border-radius: 16px; }
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            update_interval: 30s
+            header:
+              show: false
+            experimental:
+              color_threshold: true
+            all_series_config:
+              type: area
+              curve: smooth
+              stroke_width: 2
+              opacity: 0.4
+              group_by:
+                func: avg
+                duration: 5min
+                fill: last
+            series:
+              - entity: sensor.YOUR_GRID_POWER_SENSOR
+                name: Prelievo rete
+                unit: W
+                float_precision: 0
+                color_threshold:
+                  - value: 0
+                    color: "#00e676"
+                  - value: 4950
+                    color: "#ffab00"
+                  - value: 5985
+                    color: "#ff5252"
+            yaxis:
+              - min: 0
+                max: 7000
+                decimals: 0
+                align_to: 1000
+                apex_config:
+                  tickAmount: 5
+                  labels:
+                    style:
+                      colors: rgba(255,255,255,0.75)
+                    offsetX: -5
+            apex_config:
+              chart:
+                height: 220
+                toolbar:
+                  show: false
+                zoom:
+                  enabled: false
+              grid:
+                borderColor: rgba(255,255,255,0.06)
+                strokeDashArray: 3
+                yaxis:
+                  lines:
+                    show: true
+                xaxis:
+                  lines:
+                    show: false
+              xaxis:
+                labels:
+                  style:
+                    colors: rgba(255,255,255,0.55)
+              legend:
+                show: false
+              tooltip:
+                theme: dark
+                x:
+                  show: true
+              fill:
+                type: gradient
+                gradient:
+                  shade: dark
+                  shadeIntensity: 0.6
+                  inverseColors: false
+                  opacityFrom: 0.4
+                  opacityTo: 0
+                  stops:
+                    - 0
+                    - 40
+                    - 100
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(0,0,0,0.10);             /* 🔸 leggermente vetroso */
+                  border-radius: 20px;
+                  border: 1px solid rgba(255,255,255,0.12); /* bordino light come le altre */
+                  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+                  padding: 8px 6px 4px 6px;
+                  backdrop-filter: blur(8px);
+                }
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(160deg, rgba(255,170,0,0.1) 0%, rgba(20,30,50,0.95) 100%);
+              border: 1px solid rgba(255,170,0,0.3);
+              border-radius: 24px;
+              padding: 16px;
+              backdrop-filter: blur(10px);
+            }
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: TEST MODE
+            subtitle: ""
+            card_mod:
+              style: >
+                ha-card {
+                  background: linear-gradient(135deg, rgba(20,20,35,0.95) 0%, rgba(30,40,60,0.90) 50%, rgba(20,30,50,0.95) 100%);
+                  border: 1px solid rgba(0,188,212,0.22);
+                  border-radius: 24px;
+                  padding: 18px 24px 14px 24px;
+                  position: relative;
+                  overflow: hidden;
+                }
+
+                ha-card .title {
+                  margin: 0 !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.1;
+                  display: inline-flex; align-items: center; gap: 10px;
+                  background: linear-gradient(90deg, #00bcd4, #26c6da, #00bcd4);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite;
+                }
+
+                ha-card .title::before { content: "🧪"; font-size: 20px;
+                line-height: 1; -webkit-text-fill-color: #00bcd4; background:
+                none !important; filter: drop-shadow(0 0 6px
+                rgba(0,188,212,0.55)); }
+
+                ha-card .subtitle { display: none !important; }
+
+                ha-card::after { content: ""; display: block; width: 100%;
+                height: 3px; margin-top: 8px; border-radius: 999px;
+                background-image: linear-gradient(90deg, rgba(0,188,212,0.22),
+                rgba(38,198,218,0.22)), linear-gradient(90deg, transparent 0%,
+                rgba(0,188,212,0.00) 12%, rgba(0,188,212,0.85) 28%,
+                rgba(38,198,218,0.95) 45%, rgba(255,255,255,1.00) 50%,
+                rgba(38,198,218,0.95) 55%, rgba(0,188,212,0.85) 72%, transparent
+                100%), radial-gradient(circle, rgba(255,255,255,1.00) 0%,
+                rgba(255,255,255,0.70) 35%, rgba(38,198,218,0.35) 58%,
+                transparent 72%); background-size: 100% 100%, 240% 100%, 22px
+                22px; background-repeat: no-repeat; background-position: 0% 0,
+                120% 0, -14px 50%; animation: sweep-sec 2.7s ease-in-out
+                infinite alternate; box-shadow: 0 0 12px rgba(0,188,212,0.55), 0
+                0 22px rgba(38,198,218,0.35); pointer-events: none; }
+
+                @keyframes shine { to { background-position: 200% center; } }
+
+                @keyframes sweep-sec { 0% { background-position: 0% 0, 120% 0,
+                -14px 50%; opacity: 0.65; } 50% { opacity: 1; } 100% {
+                background-position: 0% 0, -20% 0, calc(100% + 14px) 50%;
+                opacity: 0.65; } }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pm_test_mode
+                name: Test Mode
+                icon: mdi:test-tube
+                layout: vertical
+                tap_action:
+                  action: toggle
+                card_mod:
+                  style: >
+                    ha-card { {% if is_state('input_boolean.pm_test_mode', 'on')
+                    %}background: radial-gradient(circle at center,
+                    rgba(0,188,212,0.3) 0%, rgba(0,188,212,0.05) 70%); border:
+                    2px solid rgba(0,188,212,0.8); box-shadow: 0 0 20px
+                    rgba(0,188,212,0.5); animation: pulse-test 1.5s infinite;{%
+                    else %}background: rgba(50,50,50,0.3); border: 1px solid
+                    rgba(100,100,100,0.3);{% endif %} border-radius: 16px; }
+
+                    @keyframes pulse-test { 0%, 100% { box-shadow: 0 0 10px
+                    rgba(0,188,212,0.5); } 50% { box-shadow: 0 0 25px
+                    rgba(0,188,212,0.8); } }
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pm_dry_run
+                name: Dry Run
+                icon: mdi:flask-outline
+                layout: vertical
+                tap_action:
+                  action: toggle
+                card_mod:
+                  style: >
+                    ha-card { {% if is_state('input_boolean.pm_dry_run', 'on')
+                    %}background: radial-gradient(circle at center,
+                    rgba(0,150,136,0.3) 0%, rgba(0,150,136,0.05) 70%); border:
+                    2px solid rgba(0,150,136,0.8); box-shadow: 0 0 20px
+                    rgba(0,150,136,0.5);{% else %}background:
+                    rgba(50,50,50,0.3); border: 1px solid
+                    rgba(100,100,100,0.3);{% endif %} border-radius: 16px; }
+          - type: custom:mushroom-number-card
+            entity: input_number.pm_test_power
+            name: Potenza simulata
+            icon: mdi:flash-triangle
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: linear-gradient(180deg,
+                rgba(255,193,7,0.15) 0%, rgba(255,193,7,0.02) 100%); border: 1px
+                solid rgba(255,193,7,0.4); border-radius: 16px; }
+          - type: custom:mushroom-template-card
+            primary: ""
+            secondary: >-
+              0-4750W → 🟢 Verde 5000W → 🟡 Gialla (1° check) 6000W → 🔴 Rossa
+              (shed immediato) ⚠️ Attiva Dry Run prima del test!
+            icon: mdi:help-circle-outline
+            icon_color: cyan
+            multiline_secondary: true
+            card_mod:
+              style: >
+                ha-card { background: rgba(0,188,212,0.06); border: 1px solid
+                rgba(0,188,212,0.2); border-radius: 16px; }
+
+                .secondary { font-family: monospace !important; font-size: 12px
+                !important; line-height: 1.8 !important; white-space: pre-line
+                !important; }
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(160deg, rgba(0,188,212,0.1) 0%, rgba(20,30,50,0.95) 100%);
+              border: 1px solid rgba(0,188,212,0.3);
+              border-radius: 24px;
+              padding: 16px;
+              backdrop-filter: blur(10px);
+            }
+  - type: grid
+    column_span: 1
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: TIMELINE
+            subtitle: ""
+            card_mod:
+              style: >
+                ha-card {
+                  background: linear-gradient(135deg, rgba(20,20,35,0.95) 0%, rgba(30,40,60,0.90) 50%, rgba(20,30,50,0.95) 100%);
+                  border: 1px solid rgba(100,181,246,0.22);
+                  border-radius: 24px;
+                  padding: 18px 24px 14px 24px;
+                  position: relative;
+                  overflow: hidden;
+                }
+
+                ha-card .title {
+                  margin: 0 !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.1;
+                  display: inline-flex; align-items: center; gap: 10px;
+                  background: linear-gradient(90deg, #42a5f5, #64b5f6, #42a5f5);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite;
+                }
+
+                ha-card .title::before { content: "📋"; font-size: 20px;
+                line-height: 1; -webkit-text-fill-color: #42a5f5; background:
+                none !important; filter: drop-shadow(0 0 5px
+                rgba(66,165,245,0.45)); }
+
+                ha-card .subtitle { display: none !important; }
+
+                ha-card::after { content: ""; display: block; width: 100%;
+                height: 4px; margin-top: 12px; border-radius: 999px;
+                background-image: linear-gradient(90deg, rgba(66,165,245,0.20),
+                rgba(100,181,246,0.20)), linear-gradient(90deg, transparent 0%,
+                rgba(66,165,245,0.00) 18%, rgba(66,165,245,0.70) 40%,
+                rgba(100,181,246,0.85) 47%, rgba(255,255,255,1.00) 50%,
+                rgba(100,181,246,0.85) 53%, rgba(66,165,245,0.70) 60%,
+                rgba(66,165,245,0.00) 82%, transparent 100%),
+                radial-gradient(circle, rgba(255,255,255,1.00) 0%,
+                rgba(255,255,255,0.55) 35%, rgba(66,165,245,0.22) 58%,
+                transparent 75%); background-size: 100% 100%, 200% 100%, 18px
+                18px; background-repeat: no-repeat; background-position: 0% 0,
+                110% 0, -12px 50%; animation: sweep-main 2.2s ease-in-out
+                infinite alternate; box-shadow: 0 0 8px rgba(100,181,246,0.30),
+                0 0 16px rgba(66,165,245,0.18); pointer-events: none; }
+
+                @keyframes shine { to { background-position: 200% center; } }
+
+                @keyframes sweep-main { 0% { background-position: 0% 0, 110% 0,
+                -12px 50%; opacity: 0.65; } 50% { opacity: 1; } 100% {
+                background-position: 0% 0, -10% 0, calc(100% + 12px) 50%;
+                opacity: 0.65; } }
+          - type: custom:mushroom-template-card
+            primary: ""
+            secondary: >-
+              {% set zone = states('sensor.power_manager_zone') %} {% set
+              elapsed_sec = state_attr('sensor.pm_elapsed_time',
+              'elapsed_seconds') | int(0) %} {% if zone == 'yellow' %} {% if
+              elapsed_sec >= 0 %}✅{% else %}⏳{% endif %} min 0 · 1° check — Solo
+              log {% if elapsed_sec >= 180 %}✅{% else %}⏳{% endif %} min 3 · 2°
+              check — Solo log {% if elapsed_sec >= 3600 %}✅{% else %}⏳{% endif
+              %} min 60 · 3° check — Shed minimo {% if elapsed_sec >= 9000 %}✅{%
+              else %}⏳{% endif %} min 150 · 4° check — TUTTO {% if elapsed_sec
+              >= 10920 %}💥{% else %}⏳{% endif %} min 182 · DISTACCO {% elif
+              zone == 'red' %} {% if state_attr('sensor.power_manager_zone',
+              'came_from_yellow') %} ⚡ Da gialla → Timer 4 minuti ✅ 00:00 · Shed
+              minimo immediato 💥 04:00 · DISTACCO contatore {% else %} ⚡
+              Ingresso diretto → Timer 2 minuti ✅ 00:00 · Shed minimo immediato
+              💥 02:00 · DISTACCO contatore {% endif %} {% else %} 🟢 Nessun
+              supero in corso {% endif %}
+            icon: mdi:format-list-checks
+            icon_color: light-blue
+            multiline_secondary: true
+            card_mod:
+              style: >
+                ha-card { background: rgba(33,150,243,0.08); border: 1px solid
+                rgba(33,150,243,0.25); border-radius: 16px; }
+
+                .secondary { font-family: monospace !important; font-size: 13px
+                !important; line-height: 1.8 !important; white-space: pre-line
+                !important; }
+          - type: custom:mushroom-template-card
+            primary: Soglie calcolate
+            secondary: >-
+              {% set cp = states('input_number.pm_contract_power') | float(4500)
+              %} {% set hy = states('input_number.pm_safety_margin') |
+              float(200) %} 🟡 Gialla: ≥ {{ (cp * 1.1) | round(0) }}W 🟢 Verde:
+              < {{ (cp * 1.1 - hy) | round(0) }}W 🔴 Rossa: ≥ {{ (cp * 1.33) |
+              round(0) }}W 🎯 Target: {{ cp | round(0) }}W
+            icon: mdi:calculator
+            icon_color: purple
+            multiline_secondary: true
+            card_mod:
+              style: >
+                ha-card { background: linear-gradient(180deg,
+                rgba(150,50,200,0.12) 0%, rgba(150,50,200,0.02) 100%); border:
+                1px solid rgba(180,100,255,0.3); border-radius: 16px; }
+
+                .secondary { font-family: monospace !important; font-size: 13px
+                !important; line-height: 1.8 !important; white-space: pre-line
+                !important; }
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(160deg, rgba(33,150,243,0.1) 0%, rgba(20,30,50,0.95) 100%);
+              border: 1px solid rgba(33,150,243,0.3);
+              border-radius: 24px;
+              padding: 16px;
+              backdrop-filter: blur(10px);
+            }
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: CONFIGURAZIONE
+            subtitle: ""
+            card_mod:
+              style: >
+                ha-card {
+                  background: linear-gradient(135deg, rgba(20,20,35,0.95) 0%, rgba(30,40,60,0.90) 50%, rgba(20,30,50,0.95) 100%);
+                  border: 1px solid rgba(206,147,216,0.22);
+                  border-radius: 24px;
+                  padding: 18px 24px 14px 24px;
+                  position: relative;
+                  overflow: hidden;
+                }
+
+                ha-card .title {
+                  margin: 0 !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.1;
+                  display: inline-flex; align-items: center; gap: 10px;
+                  background: linear-gradient(90deg, #ce93d8, #ba68c8, #ce93d8);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite;
+                }
+
+                ha-card .title::before { content: "⚙️"; font-size: 20px;
+                line-height: 1; -webkit-text-fill-color: #ce93d8; background:
+                none !important; filter: drop-shadow(0 0 6px
+                rgba(186,104,200,0.55)); }
+
+                ha-card .subtitle { display: none !important; }
+
+                ha-card::after { content: ""; display: block; width: 100%;
+                height: 3px; margin-top: 8px; border-radius: 999px;
+                background-image: linear-gradient(90deg, rgba(206,147,216,0.22),
+                rgba(186,104,200,0.22)), linear-gradient(90deg, transparent 0%,
+                rgba(206,147,216,0.00) 12%, rgba(206,147,216,0.85) 28%,
+                rgba(186,104,200,0.95) 45%, rgba(255,255,255,1.00) 50%,
+                rgba(186,104,200,0.95) 55%, rgba(206,147,216,0.85) 72%,
+                transparent 100%), radial-gradient(circle,
+                rgba(255,255,255,1.00) 0%, rgba(255,255,255,0.70) 35%,
+                rgba(186,104,200,0.35) 58%, transparent 72%); background-size:
+                100% 100%, 240% 100%, 22px 22px; background-repeat: no-repeat;
+                background-position: 0% 0, 120% 0, -14px 50%; animation:
+                sweep-sec 2.7s ease-in-out infinite alternate; box-shadow: 0 0
+                12px rgba(206,147,216,0.55), 0 0 22px rgba(186,104,200,0.35);
+                pointer-events: none; }
+
+                @keyframes shine { to { background-position: 200% center; } }
+
+                @keyframes sweep-sec { 0% { background-position: 0% 0, 120% 0,
+                -14px 50%; opacity: 0.65; } 50% { opacity: 1; } 100% {
+                background-position: 0% 0, -20% 0, calc(100% + 14px) 50%;
+                opacity: 0.65; } }
+          - type: custom:mushroom-number-card
+            entity: input_number.pm_contract_power
+            name: Potenza contrattuale
+            icon: mdi:flash
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: linear-gradient(180deg,
+                rgba(255,170,0,0.12) 0%, rgba(255,170,0,0.02) 100%); border: 1px
+                solid rgba(255,170,0,0.3); border-radius: 16px; }
+          - type: custom:mushroom-number-card
+            entity: input_number.pm_safety_margin
+            name: Isteresi rientro
+            icon: mdi:shield-half-full
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: rgba(0,150,136,0.08); border: 1px solid
+                rgba(0,150,136,0.25); border-radius: 16px; }
+          - type: custom:mushroom-select-card
+            entity: input_select.pm_altherma_restore_mode
+            name: Altherma ripristino
+            icon: mdi:heat-pump-outline
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: rgba(156,39,176,0.08); border: 1px solid
+                rgba(156,39,176,0.25); border-radius: 16px; }
+          - type: custom:mushroom-number-card
+            entity: input_number.pm_stable_minutes
+            name: Stabilità restore
+            icon: mdi:timer-sand
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: rgba(33,150,243,0.08); border: 1px solid
+                rgba(33,150,243,0.25); border-radius: 16px; }
+          - type: custom:mushroom-number-card
+            entity: input_number.pm_min_shed_duration
+            name: Durata minima shed
+            icon: mdi:timer-lock
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: rgba(255,152,0,0.08); border: 1px solid
+                rgba(255,152,0,0.25); border-radius: 16px; }
+          - type: custom:mushroom-number-card
+            entity: input_number.pm_restore_interval
+            name: Intervallo restore
+            icon: mdi:timer-refresh
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: rgba(0,188,212,0.08); border: 1px solid
+                rgba(0,188,212,0.25); border-radius: 16px; }
+          - type: custom:mushroom-number-card
+            entity: input_number.pm_min_active_power
+            name: Soglia minima attivo
+            icon: mdi:flash-alert
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: rgba(76,175,80,0.08); border: 1px solid
+                rgba(76,175,80,0.25); border-radius: 16px; }
+          - type: custom:mushroom-number-card
+            entity: input_number.pm_max_shed_time
+            name: Timeout massimo shed
+            icon: mdi:timer-alert-outline
+            layout: horizontal
+            card_mod:
+              style: >
+                ha-card { background: rgba(244,67,54,0.08); border: 1px solid
+                rgba(244,67,54,0.25); border-radius: 16px; }
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(160deg, rgba(156,39,176,0.1) 0%, rgba(20,30,50,0.95) 100%);
+              border: 1px solid rgba(156,39,176,0.3);
+              border-radius: 24px;
+              padding: 16px;
+              backdrop-filter: blur(10px);
+            }
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: input_boolean.pm_show_entity_config
+            name: Personalizza entità
+            icon: mdi:cog-transfer-outline
+            layout: horizontal
+            tap_action:
+              action: toggle
+            secondary_info: none
+            fill_container: true
+            card_mod:
+              style: |
+                ha-card {
+                  {% if is_state('input_boolean.pm_show_entity_config', 'on') %}
+                  background: linear-gradient(135deg, rgba(255,170,0,0.15) 0%, rgba(255,170,0,0.05) 100%);
+                  border: 1px solid rgba(255,170,0,0.5);
+                  {% else %}
+                  background: rgba(50,50,50,0.3);
+                  border: 1px solid rgba(100,100,100,0.3);
+                  {% endif %}
+                  border-radius: 16px;
+                  cursor: pointer;
+                }
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_boolean.pm_show_entity_config
+                state: "on"
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:mushroom-title-card
+                  title: ENTITY ID
+                  subtitle: ""
+                  card_mod:
+                    style: >
+                      ha-card {
+                        background: linear-gradient(135deg, rgba(20,20,35,0.95) 0%, rgba(30,40,60,0.90) 50%, rgba(20,30,50,0.95) 100%);
+                        border: 1px solid rgba(239,83,80,0.22);
+                        border-radius: 24px;
+                        padding: 18px 24px 14px 24px;
+                        position: relative;
+                        overflow: hidden;
+                      }
+
+                      ha-card .title {
+                        margin: 0 !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.1;
+                        display: inline-flex; align-items: center; gap: 10px;
+                        background: linear-gradient(90deg, #ef5350, #e57373, #ef5350);
+                        background-size: 200% auto;
+                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                        animation: shine 3s linear infinite;
+                      }
+
+                      ha-card .title::before { content: "🔧"; font-size: 20px;
+                      line-height: 1; -webkit-text-fill-color: #ef5350;
+                      background: none !important; filter: drop-shadow(0 0 5px
+                      rgba(239,83,80,0.45)); }
+
+                      ha-card .subtitle { display: none !important; }
+
+                      ha-card::after { content: ""; display: block; width: 100%;
+                      height: 3px; margin-top: 8px; border-radius: 999px;
+                      background-image: linear-gradient(90deg,
+                      rgba(239,83,80,0.22), rgba(229,115,115,0.22)),
+                      linear-gradient(90deg, transparent 0%,
+                      rgba(239,83,80,0.00) 12%, rgba(239,83,80,0.85) 28%,
+                      rgba(229,115,115,0.95) 45%, rgba(255,255,255,1.00) 50%,
+                      rgba(229,115,115,0.95) 55%, rgba(239,83,80,0.85) 72%,
+                      transparent 100%), radial-gradient(circle,
+                      rgba(255,255,255,1.00) 0%, rgba(255,255,255,0.70) 35%,
+                      rgba(239,83,80,0.35) 58%, transparent 72%);
+                      background-size: 100% 100%, 240% 100%, 22px 22px;
+                      background-repeat: no-repeat; background-position: 0% 0,
+                      120% 0, -14px 50%; animation: sweep-sec 2.7s ease-in-out
+                      infinite alternate; box-shadow: 0 0 12px
+                      rgba(239,83,80,0.55), 0 0 22px rgba(229,115,115,0.35);
+                      pointer-events: none; }
+
+                      @keyframes shine { to { background-position: 200% center;
+                      } }
+
+                      @keyframes sweep-sec { 0% { background-position: 0% 0,
+                      120% 0, -14px 50%; opacity: 0.65; } 50% { opacity: 1; }
+                      100% { background-position: 0% 0, -20% 0, calc(100% +
+                      14px) 50%; opacity: 0.65; } }
+                - type: custom:mushroom-title-card
+                  title: SWITCH / ENTITY
+                  subtitle: ""
+                  card_mod:
+                    style: >
+                      ha-card { padding: 10px 16px 4px 16px; }
+
+                      ha-card .title {
+                        margin: 0 !important; font-size: 14px !important; font-weight: 700 !important; line-height: 1.1;
+                        display: inline-flex; align-items: center; gap: 8px;
+                        background: linear-gradient(90deg, #ef5350, #e57373, #ef5350);
+                        background-size: 200% auto;
+                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                        animation: shine 3s linear infinite; letter-spacing: 0.5px; text-transform: uppercase;
+                      }
+
+                      ha-card .title::before { content: "🔌"; font-size: 14px;
+                      line-height: 1; -webkit-text-fill-color: #ef5350;
+                      background: none !important; filter: drop-shadow(0 0 4px
+                      rgba(239,83,80,0.45)); }
+
+                      ha-card .subtitle { display: none !important; }
+
+                      @keyframes shine { to { background-position: 200% center;
+                      } }
+                - type: horizontal-stack
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: P1
+                      secondary: "{{ states('input_text.pm_lavastoviglie_switch') }}"
+                      icon: mdi:dishwasher
+                      icon_color: green
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_lavastoviglie_switch
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(76,175,80,0.08); border:
+                          1px solid rgba(76,175,80,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                    - type: custom:mushroom-template-card
+                      primary: P2
+                      secondary: "{{ states('input_text.pm_lavatrice_switch') }}"
+                      icon: mdi:washing-machine
+                      icon_color: cyan
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_lavatrice_switch
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(0,188,212,0.08); border:
+                          1px solid rgba(0,188,212,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                    - type: custom:mushroom-template-card
+                      primary: P3
+                      secondary: "{{ states('input_text.pm_altherma_switch') }}"
+                      icon: mdi:heat-pump
+                      icon_color: deep-orange
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_altherma_switch
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(255,87,34,0.08); border:
+                          1px solid rgba(255,87,34,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                - type: horizontal-stack
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: P4
+                      secondary: "{{ states('input_text.pm_wallbox_switch') }}"
+                      icon: mdi:ev-station
+                      icon_color: teal
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_wallbox_switch
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(0,150,136,0.08); border:
+                          1px solid rgba(0,150,136,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                    - type: custom:mushroom-template-card
+                      primary: P5
+                      secondary: "{{ states('input_text.pm_ferro_switch') }}"
+                      icon: mdi:iron
+                      icon_color: amber
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_ferro_switch
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(255,193,7,0.08); border:
+                          1px solid rgba(255,193,7,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                    - type: custom:mushroom-template-card
+                      primary: P6
+                      secondary: "{{ states('input_text.pm_asciugatrice_switch') }}"
+                      icon: mdi:tumble-dryer
+                      icon_color: purple
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_asciugatrice_switch
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(156,39,176,0.08); border:
+                          1px solid rgba(156,39,176,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                - type: custom:mushroom-title-card
+                  title: SENSORI POTENZA
+                  subtitle: ""
+                  card_mod:
+                    style: >
+                      ha-card { padding: 10px 16px 4px 16px; }
+
+                      ha-card .title {
+                        margin: 0 !important; font-size: 14px !important; font-weight: 700 !important; line-height: 1.1;
+                        display: inline-flex; align-items: center; gap: 8px;
+                        background: linear-gradient(90deg, #ffab00, #ffd54f, #ffab00);
+                        background-size: 200% auto;
+                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                        animation: shine 3s linear infinite; letter-spacing: 0.5px; text-transform: uppercase;
+                      }
+
+                      ha-card .title::before { content: "📊"; font-size: 14px;
+                      line-height: 1; -webkit-text-fill-color: #ffab00;
+                      background: none !important; filter: drop-shadow(0 0 4px
+                      rgba(255,170,0,0.45)); }
+
+                      ha-card .subtitle { display: none !important; }
+
+                      @keyframes shine { to { background-position: 200% center;
+                      } }
+                - type: horizontal-stack
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: P1
+                      secondary: "{{ states('input_text.pm_lavastoviglie_power') }}"
+                      icon: mdi:dishwasher
+                      icon_color: green
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_lavastoviglie_power
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(76,175,80,0.08); border:
+                          1px solid rgba(76,175,80,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                    - type: custom:mushroom-template-card
+                      primary: P2
+                      secondary: "{{ states('input_text.pm_lavatrice_power') }}"
+                      icon: mdi:washing-machine
+                      icon_color: cyan
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_lavatrice_power
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(0,188,212,0.08); border:
+                          1px solid rgba(0,188,212,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                    - type: custom:mushroom-template-card
+                      primary: P3
+                      secondary: "{{ states('input_text.pm_altherma_power') }}"
+                      icon: mdi:heat-pump
+                      icon_color: deep-orange
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_altherma_power
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(255,87,34,0.08); border:
+                          1px solid rgba(255,87,34,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                - type: horizontal-stack
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: P4
+                      secondary: "{{ states('input_text.pm_wallbox_power') }}"
+                      icon: mdi:ev-station
+                      icon_color: teal
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_wallbox_power
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(0,150,136,0.08); border:
+                          1px solid rgba(0,150,136,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                    - type: custom:mushroom-template-card
+                      primary: P5
+                      secondary: "{{ states('input_text.pm_ferro_power') }}"
+                      icon: mdi:iron
+                      icon_color: amber
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_ferro_power
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(255,193,7,0.08); border:
+                          1px solid rgba(255,193,7,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+                    - type: custom:mushroom-template-card
+                      primary: P6
+                      secondary: "{{ states('input_text.pm_asciugatrice_power') }}"
+                      icon: mdi:tumble-dryer
+                      icon_color: purple
+                      tap_action:
+                        action: more-info
+                        entity: input_text.pm_asciugatrice_power
+                      card_mod:
+                        style: >
+                          ha-card { background: rgba(156,39,176,0.08); border:
+                          1px solid rgba(156,39,176,0.25); border-radius: 12px;
+                          cursor: pointer; } .secondary { font-size: 10px
+                          !important; opacity: 0.7; word-break: break-all; }
+          - type: vertical-stack
+            cards:
+              - type: custom:mushroom-title-card
+                title: DND ALEXA
+                subtitle: ""
+                card_mod:
+                  style: >
+                    ha-card {
+                      background: transparent; border: none;
+                      padding: 8px 0 0 0 !important; margin: 0;
+                    }
+
+                    ha-card .title {
+                      font-size: 14px !important; font-weight: 700 !important;
+                      letter-spacing: 1.5px; text-transform: uppercase;
+                      display: inline-flex; align-items: center; gap: 6px;
+                      background: linear-gradient(90deg, #7e57c2, #b39ddb, #7e57c2);
+                      background-size: 200% auto;
+                      -webkit-background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                      animation: shine 3s linear infinite;
+                    }
+
+                    ha-card .title::before {
+                      content: "🔇"; font-size: 16px;
+                      -webkit-text-fill-color: #b39ddb;
+                      filter: drop-shadow(0 0 4px rgba(179,157,219,0.5));
+                    }
+
+                    ha-card .subtitle { display: none !important; }
+
+                    @keyframes shine { to { background-position: 200% center; }
+                    }
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-entity-card
+                    entity: input_datetime.pm_dnd1_start
+                    name: 🌙 Notte da
+                    icon: ""
+                    layout: horizontal
+                    card_mod:
+                      style: >
+                        ha-card { background: rgba(126,87,194,0.08); border: 1px
+                        solid rgba(126,87,194,0.25); border-radius: 12px;
+                        --card-primary-font-size: 12px;
+                        --card-secondary-font-size: 12px; } mushroom-state-info
+                        { flex: 1; } mushroom-shape-icon { display: none
+                        !important; }
+                  - type: custom:mushroom-entity-card
+                    entity: input_datetime.pm_dnd1_end
+                    name: ☀️ a
+                    icon: ""
+                    layout: horizontal
+                    card_mod:
+                      style: >
+                        ha-card { background: rgba(126,87,194,0.08); border: 1px
+                        solid rgba(126,87,194,0.25); border-radius: 12px;
+                        --card-primary-font-size: 12px;
+                        --card-secondary-font-size: 12px; } mushroom-state-info
+                        { flex: 1; } mushroom-shape-icon { display: none
+                        !important; }
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-entity-card
+                    entity: input_datetime.pm_dnd2_start
+                    name: 😴 Pomeriggio da
+                    icon: ""
+                    layout: horizontal
+                    card_mod:
+                      style: >
+                        ha-card { background: rgba(126,87,194,0.08); border: 1px
+                        solid rgba(126,87,194,0.25); border-radius: 12px;
+                        --card-primary-font-size: 12px;
+                        --card-secondary-font-size: 12px; } mushroom-state-info
+                        { flex: 1; } mushroom-shape-icon { display: none
+                        !important; }
+                  - type: custom:mushroom-entity-card
+                    entity: input_datetime.pm_dnd2_end
+                    name: ⏰ a
+                    icon: ""
+                    layout: horizontal
+                    card_mod:
+                      style: >
+                        ha-card { background: rgba(126,87,194,0.08); border: 1px
+                        solid rgba(126,87,194,0.25); border-radius: 12px;
+                        --card-primary-font-size: 12px;
+                        --card-secondary-font-size: 12px; } mushroom-state-info
+                        { flex: 1; } mushroom-shape-icon { display: none
+                        !important; }
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(160deg, rgba(156,39,176,0.1) 0%, rgba(20,30,50,0.95) 100%);
+                  border: 1px solid rgba(156,39,176,0.3);
+                  border-radius: 24px;
+                  padding: 16px;
+                  backdrop-filter: blur(10px);
+                }
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(160deg, rgba(244,67,54,0.06) 0%, rgba(20,30,50,0.95) 100%);
+              border: 1px solid rgba(244,67,54,0.2);
+              border-radius: 24px;
+              padding: 16px;
+              backdrop-filter: blur(10px);
+            }
+  - type: grid
+    column_span: 1
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: DISPOSITIVI
+            subtitle: ""
+            card_mod:
+              style: >
+                ha-card {
+                  background: linear-gradient(135deg, rgba(20,20,35,0.95) 0%, rgba(30,40,60,0.90) 50%, rgba(20,30,50,0.95) 100%);
+                  border: 1px solid rgba(129,199,132,0.22);
+                  border-radius: 24px;
+                  padding: 18px 24px 14px 24px;
+                  position: relative;
+                  overflow: hidden;
+                }
+
+                ha-card .title {
+                  margin: 0 !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.1;
+                  display: inline-flex; align-items: center; gap: 10px;
+                  background: linear-gradient(90deg, #66bb6a, #81c784, #66bb6a);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite;
+                }
+
+                ha-card .title::before { content: "🔌"; font-size: 20px;
+                line-height: 1; -webkit-text-fill-color: #66bb6a; background:
+                none !important; filter: drop-shadow(0 0 5px
+                rgba(102,187,106,0.45)); }
+
+                ha-card .subtitle { display: none !important; }
+
+                ha-card::after { content: ""; display: block; width: 100%;
+                height: 4px; margin-top: 12px; border-radius: 999px;
+                background-image: linear-gradient(90deg, rgba(102,187,106,0.20),
+                rgba(129,199,132,0.20)), linear-gradient(90deg, transparent 0%,
+                rgba(102,187,106,0.00) 18%, rgba(102,187,106,0.70) 40%,
+                rgba(129,199,132,0.85) 47%, rgba(255,255,255,1.00) 50%,
+                rgba(129,199,132,0.85) 53%, rgba(102,187,106,0.70) 60%,
+                rgba(102,187,106,0.00) 82%, transparent 100%),
+                radial-gradient(circle, rgba(255,255,255,1.00) 0%,
+                rgba(255,255,255,0.55) 35%, rgba(129,199,132,0.22) 58%,
+                transparent 75%); background-size: 100% 100%, 200% 100%, 18px
+                18px; background-repeat: no-repeat; background-position: 0% 0,
+                110% 0, -12px 50%; animation: sweep-main 2.2s ease-in-out
+                infinite alternate; box-shadow: 0 0 8px rgba(129,199,132,0.30),
+                0 0 16px rgba(102,187,106,0.18); pointer-events: none; }
+
+                @keyframes shine { to { background-position: 200% center; } }
+
+                @keyframes sweep-main { 0% { background-position: 0% 0, 110% 0,
+                -12px 50%; opacity: 0.65; } 50% { opacity: 1; } 100% {
+                background-position: 0% 0, -10% 0, calc(100% + 12px) 50%;
+                opacity: 0.65; } }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{ states('sensor.YOUR_DISHWASHER_POWER') | float(0) | round(0)
+                  }}W
+                secondary: P1 Lavastoviglie
+                icon: mdi:dishwasher
+                color: >-
+                  {% if states('sensor.YOUR_DISHWASHER_POWER') | float(0) > 10
+                  %}green{% else %}disabled{% endif %}
+                vertical: true
+                features_position: bottom
+                card_mod:
+                  style: >
+                    ha-card { background: linear-gradient(180deg,
+                    rgba(76,175,80,0.15) 0%, rgba(76,175,80,0.02) 100%); border:
+                    1px solid rgba(76,175,80,0.3); border-radius: 16px; }
+                    .primary { font-size: 20px !important; font-weight: 600
+                    !important; }
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{ states('sensor.YOUR_WASHING_MACHINE_POWER') | float(0) |
+                  round(0) }}W
+                secondary: P2 Lavatrice
+                icon: mdi:washing-machine
+                color: >-
+                  {% if states('sensor.YOUR_WASHING_MACHINE_POWER') | float(0) > 10
+                  %}cyan{% else %}disabled{% endif %}
+                vertical: true
+                features_position: bottom
+                card_mod:
+                  style: >
+                    ha-card { background: linear-gradient(180deg,
+                    rgba(0,188,212,0.15) 0%, rgba(0,188,212,0.02) 100%); border:
+                    1px solid rgba(0,188,212,0.3); border-radius: 16px; }
+                    .primary { font-size: 20px !important; font-weight: 600
+                    !important; }
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{ states('sensor.YOUR_HEAT_PUMP_POWER') |
+                  float(0) | round(0) }}W
+                secondary: P3 Pompa calore
+                icon: mdi:heat-pump
+                color: >-
+                  {% if states('sensor.YOUR_HEAT_PUMP_POWER') |
+                  float(0) > 10 %}deep-orange{% else %}disabled{% endif %}
+                vertical: true
+                features_position: bottom
+                card_mod:
+                  style: >
+                    ha-card { background: linear-gradient(180deg,
+                    rgba(255,87,34,0.15) 0%, rgba(255,87,34,0.02) 100%); border:
+                    1px solid rgba(255,87,34,0.3); border-radius: 16px; }
+                    .primary { font-size: 20px !important; font-weight: 600
+                    !important; }
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{ states('sensor.pm_luna2000_carica_da_rete') | float(0) |
+                  round(0) }}W
+                secondary: P0 Luna2000
+                icon: mdi:battery-charging
+                color: >-
+                  {% if states('sensor.pm_luna2000_carica_da_rete') | float(0) >
+                  10 %}deep-purple{% else %}disabled{% endif %}
+                vertical: true
+                features_position: bottom
+                card_mod:
+                  style: >
+                    ha-card { background: linear-gradient(180deg,
+                    rgba(126,87,194,0.15) 0%, rgba(126,87,194,0.02) 100%);
+                    border: 1px solid rgba(126,87,194,0.3); border-radius: 16px;
+                    } .primary { font-size: 20px !important; font-weight: 600
+                    !important; }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{ states('sensor.YOUR_WALLBOX_POWER') | float(0) |
+                  round(0) }}W
+                secondary: P4 WallBox
+                icon: mdi:ev-station
+                color: >-
+                  {% if states('sensor.YOUR_WALLBOX_POWER') | float(0) >
+                  10 %}teal{% else %}disabled{% endif %}
+                vertical: true
+                features_position: bottom
+                card_mod:
+                  style: >
+                    ha-card { background: linear-gradient(180deg,
+                    rgba(0,150,136,0.15) 0%, rgba(0,150,136,0.02) 100%); border:
+                    1px solid rgba(0,150,136,0.3); border-radius: 16px; }
+                    .primary { font-size: 20px !important; font-weight: 600
+                    !important; }
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{
+                  states('sensor.YOUR_IRON_POWER')
+                  | float(0) | round(0) }}W
+                secondary: P5 Ferro
+                icon: mdi:iron
+                icon_color: >-
+                  {% if
+                  states('sensor.YOUR_IRON_POWER')
+                  | float(0) > 10 %}amber{% else %}disabled{% endif %}
+                layout: vertical
+                card_mod:
+                  style: >
+                    ha-card { background: linear-gradient(180deg,
+                    rgba(255,193,7,0.15) 0%, rgba(255,193,7,0.02) 100%); border:
+                    1px solid rgba(255,193,7,0.3); border-radius: 16px; }
+                    .primary { font-size: 20px !important; font-weight: 600
+                    !important; }
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{ states('sensor.YOUR_DRYER_POWER')
+                  | float(0) | round(0) }}W
+                secondary: P6 Asciugatrice
+                icon: mdi:tumble-dryer
+                icon_color: >-
+                  {% if
+                  states('sensor.YOUR_DRYER_POWER') |
+                  float(0) > 10 %}purple{% else %}disabled{% endif %}
+                layout: vertical
+                card_mod:
+                  style: >
+                    ha-card { background: linear-gradient(180deg,
+                    rgba(156,39,176,0.15) 0%, rgba(156,39,176,0.02) 100%);
+                    border: 1px solid rgba(156,39,176,0.3); border-radius: 16px;
+                    } .primary { font-size: 20px !important; font-weight: 600
+                    !important; }
+          - type: custom:mushroom-title-card
+            title: NON CONTROLLABILI
+            subtitle: ""
+            card_mod:
+              style: >
+                ha-card { padding: 10px 16px 4px 16px; }
+
+                ha-card .title {
+                  margin: 0 !important; font-size: 14px !important; font-weight: 700 !important; line-height: 1.1;
+                  display: inline-flex; align-items: center; gap: 8px;
+                  background: linear-gradient(90deg, #ef5350, #e57373, #ef5350);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite; letter-spacing: 0.5px; text-transform: uppercase;
+                }
+
+                ha-card .title::before { content: "⚠️"; font-size: 14px;
+                line-height: 1; -webkit-text-fill-color: #ff5252; background:
+                none !important; filter: drop-shadow(0 0 4px
+                rgba(239,83,80,0.45)); }
+
+                ha-card .subtitle { display: none !important; }
+
+                @keyframes shine { to { background-position: 200% center; } }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{ states('sensor.YOUR_OVEN_POWER') | float(0) |
+                  round(0) }}W
+                secondary: Forno
+                icon: mdi:stove
+                icon_color: >-
+                  {% if states('sensor.YOUR_OVEN_POWER') | float(0)
+                  > 50 %}red{% else %}disabled{% endif %}
+                layout: vertical
+                card_mod:
+                  style: >
+                    ha-card { background: rgba(244,67,54,0.08); border: 1px
+                    solid rgba(244,67,54,0.25); border-radius: 12px; }
+              - type: custom:mushroom-template-card
+                primary: >-
+                  {{ states('sensor.YOUR_COOKTOP_POWER') | float(0) |
+                  round(0) }}W
+                secondary: Induzione
+                icon: mdi:pot-steam
+                icon_color: >-
+                  {% if states('sensor.YOUR_COOKTOP_POWER') | float(0)
+                  > 50 %}deep-orange{% else %}disabled{% endif %}
+                layout: vertical
+                card_mod:
+                  style: >
+                    ha-card { background: rgba(255,87,34,0.08); border: 1px
+                    solid rgba(255,87,34,0.25); border-radius: 12px; }
+          - type: custom:mushroom-title-card
+            title: ABILITA / DISABILITA
+            subtitle: ""
+            card_mod:
+              style: >
+                ha-card { padding: 10px 16px 4px 16px; }
+
+                ha-card .title {
+                  margin: 0 !important; font-size: 14px !important; font-weight: 700 !important; line-height: 1.1;
+                  display: inline-flex; align-items: center; gap: 8px;
+                  background: linear-gradient(90deg, #66bb6a, #81c784, #66bb6a);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite; letter-spacing: 0.5px; text-transform: uppercase;
+                }
+
+                ha-card .title::before { content: "✅"; font-size: 14px;
+                line-height: 1; -webkit-text-fill-color: #66bb6a; background:
+                none !important; filter: drop-shadow(0 0 4px
+                rgba(102,187,106,0.45)); }
+
+                ha-card .subtitle { display: none !important; }
+
+                @keyframes shine { to { background-position: 200% center; } }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pm_lavastoviglie_enabled
+                name: P1
+                icon: mdi:dishwasher
+                layout: vertical
+                tap_action:
+                  action: toggle
+                card_mod:
+                  style: >
+                    ha-card { {% if
+                    is_state('input_boolean.pm_lavastoviglie_enabled', 'on')
+                    %}background: rgba(0,230,118,0.1); border: 1px solid
+                    rgba(0,230,118,0.4);{% else %}background:
+                    rgba(50,50,50,0.3); border: 1px solid
+                    rgba(100,100,100,0.3);{% endif %} border-radius: 12px; }
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pm_lavatrice_enabled
+                name: P2
+                icon: mdi:washing-machine
+                layout: vertical
+                tap_action:
+                  action: toggle
+                card_mod:
+                  style: >
+                    ha-card { {% if
+                    is_state('input_boolean.pm_lavatrice_enabled', 'on')
+                    %}background: rgba(0,230,118,0.1); border: 1px solid
+                    rgba(0,230,118,0.4);{% else %}background:
+                    rgba(50,50,50,0.3); border: 1px solid
+                    rgba(100,100,100,0.3);{% endif %} border-radius: 12px; }
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pm_altherma_enabled
+                name: P3
+                icon: mdi:heat-pump
+                layout: vertical
+                tap_action:
+                  action: toggle
+                card_mod:
+                  style: >
+                    ha-card { {% if
+                    is_state('input_boolean.pm_altherma_enabled', 'on')
+                    %}background: rgba(0,230,118,0.1); border: 1px solid
+                    rgba(0,230,118,0.4);{% else %}background:
+                    rgba(50,50,50,0.3); border: 1px solid
+                    rgba(100,100,100,0.3);{% endif %} border-radius: 12px; }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pm_wallbox_enabled
+                name: P4
+                icon: mdi:ev-station
+                layout: vertical
+                tap_action:
+                  action: toggle
+                card_mod:
+                  style: >
+                    ha-card { {% if is_state('input_boolean.pm_wallbox_enabled',
+                    'on') %}background: rgba(0,230,118,0.1); border: 1px solid
+                    rgba(0,230,118,0.4);{% else %}background:
+                    rgba(50,50,50,0.3); border: 1px solid
+                    rgba(100,100,100,0.3);{% endif %} border-radius: 12px; }
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pm_ferro_enabled
+                name: P5
+                icon: mdi:iron
+                layout: vertical
+                tap_action:
+                  action: toggle
+                card_mod:
+                  style: >
+                    ha-card { {% if is_state('input_boolean.pm_ferro_enabled',
+                    'on') %}background: rgba(0,230,118,0.1); border: 1px solid
+                    rgba(0,230,118,0.4);{% else %}background:
+                    rgba(50,50,50,0.3); border: 1px solid
+                    rgba(100,100,100,0.3);{% endif %} border-radius: 12px; }
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pm_asciugatrice_enabled
+                name: P6
+                icon: mdi:tumble-dryer
+                layout: vertical
+                tap_action:
+                  action: toggle
+                card_mod:
+                  style: >
+                    ha-card { {% if
+                    is_state('input_boolean.pm_asciugatrice_enabled', 'on')
+                    %}background: rgba(0,230,118,0.1); border: 1px solid
+                    rgba(0,230,118,0.4);{% else %}background:
+                    rgba(50,50,50,0.3); border: 1px solid
+                    rgba(100,100,100,0.3);{% endif %} border-radius: 12px; }
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(160deg, rgba(76,175,80,0.1) 0%, rgba(20,30,50,0.95) 100%);
+              border: 1px solid rgba(76,175,80,0.3);
+              border-radius: 24px;
+              padding: 16px;
+              backdrop-filter: blur(10px);
+            }
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-title-card
+            title: STORICO
+            subtitle: ""
+            card_mod:
+              style: >
+                ha-card { padding: 12px 16px 8px 16px; }
+
+                ha-card .title {
+                  margin: 0 !important; font-size: 20px !important; font-weight: 700 !important; line-height: 1.1;
+                  display: inline-flex; align-items: center; gap: 10px;
+                  background: linear-gradient(90deg, #90a4ae, #b0bec5, #90a4ae);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite;
+                }
+
+                ha-card .title::before { content: "📈"; font-size: 20px;
+                line-height: 1; -webkit-text-fill-color: #b0bec5; background:
+                none !important; filter: drop-shadow(0 0 6px
+                rgba(176,190,197,0.55)); }
+
+                ha-card .subtitle { display: none !important; }
+
+                ha-card::after { content: ""; display: block; width: 100%;
+                height: 3px; margin-top: 8px; border-radius: 999px;
+                background-image: linear-gradient(90deg, rgba(144,164,174,0.22),
+                rgba(176,190,197,0.22)), linear-gradient(90deg, transparent 0%,
+                rgba(144,164,174,0.00) 12%, rgba(144,164,174,0.85) 28%,
+                rgba(176,190,197,0.95) 45%, rgba(255,255,255,1.00) 50%,
+                rgba(176,190,197,0.95) 55%, rgba(144,164,174,0.85) 72%,
+                transparent 100%), radial-gradient(circle,
+                rgba(255,255,255,1.00) 0%, rgba(255,255,255,0.70) 35%,
+                rgba(176,190,197,0.35) 58%, transparent 72%); background-size:
+                100% 100%, 240% 100%, 22px 22px; background-repeat: no-repeat;
+                background-position: 0% 0, 120% 0, -14px 50%; animation:
+                sweep-sec 2.7s ease-in-out infinite alternate; box-shadow: 0 0
+                12px rgba(144,164,174,0.55), 0 0 22px rgba(176,190,197,0.35);
+                pointer-events: none; }
+
+                @keyframes shine { to { background-position: 200% center; } }
+
+                @keyframes sweep-sec { 0% { background-position: 0% 0, 120% 0,
+                -14px 50%; opacity: 0.65; } 50% { opacity: 1; } 100% {
+                background-position: 0% 0, -20% 0, calc(100% + 14px) 50%;
+                opacity: 0.65; } }
+          - type: history-graph
+            entities:
+              - entity: sensor.power_manager_zone
+                name: Zona
+            hours_to_show: 24
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
+                  border: 1px solid rgba(255,255,255,0.1);
+                  border-radius: 20px;
+                  padding: 8px 12px;
+                  backdrop-filter: blur(10px);
+                }
+                ha-card .card-header {
+                  font-size: 14px !important;
+                  font-weight: 700 !important;
+                  letter-spacing: 0.5px;
+                  text-transform: uppercase;
+                  background: linear-gradient(90deg, #ffab00, #ffd54f, #ffab00);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text;
+                  -webkit-text-fill-color: transparent;
+                  animation: shine 3s linear infinite;
+                  padding: 8px 8px 0 8px !important;
+                }
+                ha-card .card-header::before {
+                  content: "📊 ";
+                  -webkit-text-fill-color: #ffab00;
+                  background: none !important;
+                }
+                @keyframes shine { to { background-position: 200% center; } }
+          - type: logbook
+            title: Log eventi PM
+            entities:
+              - sensor.power_manager_zone
+              - timer.pm_distacco_countdown
+            hours_to_show: 24
+            card_mod:
+              style: >
+                ha-card { background: rgba(0,0,0,0.3); border: 1px solid
+                rgba(255,255,255,0.1); border-radius: 16px; }
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(180deg, rgba(30,30,40,0.95) 0%, rgba(20,25,35,0.98) 100%);
+              border: 1px solid rgba(255,255,255,0.1);
+              border-radius: 24px;
+              padding: 16px;
+            }
+cards: []

@@ -1,0 +1,238 @@
+# =============================================================================
+# POWER MANAGER v6 - Package Home Assistant
+# =============================================================================
+# Salva come: config/packages/power_manager.yaml
+#
+# Nel tuo configuration.yaml:
+#   homeassistant:
+#     packages: !include_dir_named packages
+#
+# =============================================================================
+
+# --- Timer countdown distacco ---
+timer:
+  pm_distacco_countdown:
+    name: "PM Countdown distacco"
+    icon: mdi:timer-alert
+
+# --- Sensore potenza carica batteria da rete ---
+# Se non hai un accumulo domestico, puoi rimuovere questa sezione.
+# Adatta le entity ai tuoi sensori reali.
+template:
+  - sensor:
+      - name: "PM Accumulo carica da rete"
+        unique_id: pm_battery_grid_charge_power
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        icon: mdi:battery-charging
+        state: >
+          {% if is_state('input_boolean.forcible_charge_switch', 'on') %}
+            {% set pw = states('sensor.battery_power_dashboard') | float(0) %}
+            {% if pw < 0 %}
+              {{ (pw | abs) | round(0) }}
+            {% else %}
+              0
+            {% endif %}
+          {% else %}
+            0
+          {% endif %}
+
+# --- Entity ID dinamici ---
+# Sostituisci i valori "initial" con i tuoi entity_id reali,
+# oppure modificali dalla dashboard dopo il primo avvio.
+input_text:
+  pm_wallbox_switch:
+    name: "PM WallBox - Switch"
+    initial: "switch.YOUR_WALLBOX_SWITCH"
+    max: 255
+  pm_wallbox_power:
+    name: "PM WallBox - Sensore Potenza"
+    initial: "sensor.YOUR_WALLBOX_POWER"
+    max: 255
+  pm_altherma_switch:
+    name: "PM Pompa di calore - Entity"
+    initial: "climate.YOUR_HEAT_PUMP"
+    max: 255
+  pm_altherma_power:
+    name: "PM Pompa di calore - Sensore Potenza"
+    initial: "sensor.YOUR_HEAT_PUMP_POWER"
+    max: 255
+  pm_lavastoviglie_switch:
+    name: "PM Lavastoviglie - Switch"
+    initial: "switch.YOUR_DISHWASHER_SWITCH"
+    max: 255
+  pm_lavastoviglie_power:
+    name: "PM Lavastoviglie - Sensore Potenza"
+    initial: "sensor.YOUR_DISHWASHER_POWER"
+    max: 255
+  pm_lavatrice_switch:
+    name: "PM Lavatrice - Switch"
+    initial: "switch.YOUR_WASHING_MACHINE_SWITCH"
+    max: 255
+  pm_lavatrice_power:
+    name: "PM Lavatrice - Sensore Potenza"
+    initial: "sensor.YOUR_WASHING_MACHINE_POWER"
+    max: 255
+  pm_ferro_switch:
+    name: "PM Ferro - Switch"
+    initial: "switch.YOUR_IRON_SWITCH"
+    max: 255
+  pm_ferro_power:
+    name: "PM Ferro - Sensore Potenza"
+    initial: "sensor.YOUR_IRON_POWER"
+    max: 255
+  pm_asciugatrice_switch:
+    name: "PM Asciugatrice - Switch"
+    initial: "switch.YOUR_DRYER_SWITCH"
+    max: 255
+  pm_asciugatrice_power:
+    name: "PM Asciugatrice - Sensore Potenza"
+    initial: "sensor.YOUR_DRYER_POWER"
+    max: 255
+
+# --- Abilitazione dispositivi ---
+input_boolean:
+  pm_wallbox_enabled:
+    name: "PM WallBox"
+    initial: true
+    icon: mdi:ev-station
+  pm_altherma_enabled:
+    name: "PM Pompa di calore"
+    initial: true
+    icon: mdi:heat-pump
+  pm_lavastoviglie_enabled:
+    name: "PM Lavastoviglie"
+    initial: true
+    icon: mdi:dishwasher
+  pm_lavatrice_enabled:
+    name: "PM Lavatrice"
+    initial: true
+    icon: mdi:washing-machine
+  pm_ferro_enabled:
+    name: "PM Ferro"
+    initial: true
+    icon: mdi:iron
+  pm_asciugatrice_enabled:
+    name: "PM Asciugatrice"
+    initial: true
+    icon: mdi:tumble-dryer
+  pm_test_mode:
+    name: "PM Test Mode"
+    initial: false
+    icon: mdi:test-tube
+  pm_dry_run:
+    name: "PM Dry Run"
+    initial: false
+    icon: mdi:flask-outline
+  pm_show_entity_config:
+    name: "Personalizza Sensori"
+    initial: false
+    icon: mdi:cog-transfer
+
+# --- DND Alexa ---
+input_datetime:
+  pm_dnd1_start:
+    name: "PM DND 1 - Inizio"
+    has_date: false
+    has_time: true
+    icon: mdi:weather-night
+  pm_dnd1_end:
+    name: "PM DND 1 - Fine"
+    has_date: false
+    has_time: true
+    icon: mdi:weather-sunny
+  pm_dnd2_start:
+    name: "PM DND 2 - Inizio"
+    has_date: false
+    has_time: true
+    icon: mdi:sleep
+  pm_dnd2_end:
+    name: "PM DND 2 - Fine"
+    has_date: false
+    has_time: true
+    icon: mdi:alarm
+
+# --- Selettori ---
+input_select:
+  pm_altherma_restore_mode:
+    name: "PM Climate - Modo Ripristino"
+    options:
+      - heat
+      - cool
+      - auto
+      - "off"
+    initial: heat
+    icon: mdi:heat-pump-outline
+
+# --- Parametri numerici ---
+input_number:
+  pm_contract_power:
+    name: "PM Potenza Contrattuale"
+    min: 3000
+    max: 6500
+    step: 500
+    initial: 4500
+    unit_of_measurement: W
+    icon: mdi:flash
+    mode: slider
+  pm_safety_margin:
+    name: "PM Isteresi"
+    min: 0
+    max: 500
+    step: 50
+    initial: 200
+    unit_of_measurement: W
+    icon: mdi:shield-half-full
+  pm_stable_minutes:
+    name: "PM Stabilita prima restore"
+    min: 1
+    max: 30
+    step: 1
+    initial: 5
+    unit_of_measurement: min
+    icon: mdi:timer-sand
+  pm_min_shed_duration:
+    name: "PM Durata minima shed"
+    min: 60
+    max: 900
+    step: 30
+    initial: 300
+    unit_of_measurement: sec
+    icon: mdi:timer-lock
+  pm_test_power:
+    name: "PM Simulazione potenza"
+    min: 0
+    max: 10000
+    step: 100
+    initial: 0
+    unit_of_measurement: W
+    icon: mdi:flash-triangle
+    mode: slider
+  pm_restore_interval:
+    name: "PM Intervallo restore"
+    min: 60
+    max: 600
+    step: 30
+    initial: 180
+    unit_of_measurement: sec
+    icon: mdi:timer-refresh
+    mode: slider
+  pm_min_active_power:
+    name: "PM Soglia minima attivo"
+    min: 20
+    max: 500
+    step: 10
+    initial: 100
+    unit_of_measurement: W
+    icon: mdi:flash-alert
+    mode: slider
+  pm_max_shed_time:
+    name: "PM Timeout massimo shed"
+    min: 10
+    max: 120
+    step: 5
+    initial: 30
+    unit_of_measurement: min
+    icon: mdi:timer-alert-outline
+    mode: slider

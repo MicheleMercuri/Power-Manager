@@ -1,0 +1,19 @@
+# Secrets - MAI committare
+apps.yaml
+secrets.yaml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,128 @@
+# =============================================================================
+# POWER MANAGER v6 - Configurazione AppDaemon
+# =============================================================================
+# File: config/appdaemon/apps/apps.yaml (merge con il tuo apps.yaml)
+#
+# ⚠️ IMPORTANTE: Personalizza TUTTI i valori con i tuoi entity_id reali!
+# =============================================================================
+
+power_manager:
+  module: power_manager
+  class: PowerManager
+
+  # --- Sensore potenza dalla rete (Watt, positivo = assorbe) ---
+  power_sensor: "sensor.YOUR_GRID_POWER_SENSOR"
+
+  # --- Contratto (default, sovrascrivibile da dashboard) ---
+  contract_power: 4500
+  hysteresis: 200
+
+  # --- Alexa (opzionale) ---
+  alexa_notify_service: "notify/alexa_media"
+
+  # --- Telegram (API diretta, nessuna integrazione HA richiesta) ---
+  # Crea un bot su @BotFather e ottieni il token
+  # Il chat_id lo trovi inviando un messaggio al bot e visitando:
+  # https://api.telegram.org/bot<TOKEN>/getUpdates
+  telegram_bot_token: "YOUR_BOT_TOKEN"
+  telegram_chat_id: 0  # YOUR_CHAT_ID (numero intero)
+
+  # --- Accumulo domestico (opzionale, es. Huawei Luna2000) ---
+  # Se non hai un accumulo, rimuovi queste 4 righe
+  luna_charge_switch: "input_boolean.forcible_charge_switch"
+  luna_power_slider: "input_number.power_slider"
+  luna_power_sensor: "sensor.battery_power_dashboard"
+  luna_power_step: 100  # step minimo potenza in Watt
+
+  # --- Anti ping-pong ---
+  stable_minutes_before_restore: 5
+  min_shed_duration: 300
+
+  # =====================================================================
+  # DISPOSITIVI CONTROLLABILI
+  # =====================================================================
+  # Ogni device deve avere: name, entity_id, priority, estimated_power,
+  # power_sensor, dashboard_prefix.
+  #
+  # Opzionali: domain (default: switch), inverted, shed_in_yellow,
+  #            shed_in_red, auto_restore, needs_manual_restart,
+  #            turn_off_service, turn_on_service
+  #
+  # La priority determina l'ordine di spegnimento (1 = primo a spegnersi)
+  # dashboard_prefix deve corrispondere agli helper in power_manager.yaml
+  # =====================================================================
+  devices:
+    # P1 - Lavastoviglie
+    - name: "Lavastoviglie"
+      entity_id: "switch.YOUR_DISHWASHER_SWITCH"
+      priority: 1
+      estimated_power: 1800
+      power_sensor: "sensor.YOUR_DISHWASHER_POWER"
+      dashboard_prefix: "pm_lavastoviglie"
+      shed_in_yellow: true
+      shed_in_red: true
+
+    # P2 - Lavatrice
+    - name: "Lavatrice"
+      entity_id: "switch.YOUR_WASHING_MACHINE_SWITCH"
+      priority: 2
+      estimated_power: 2000
+      power_sensor: "sensor.YOUR_WASHING_MACHINE_POWER"
+      dashboard_prefix: "pm_lavatrice"
+      shed_in_yellow: true
+      shed_in_red: true
+
+    # P3 - Pompa di calore (esempio con domain: climate)
+    - name: "Pompa di calore"
+      entity_id: "climate.YOUR_HEAT_PUMP"
+      priority: 3
+      estimated_power: 1500
+      power_sensor: "sensor.YOUR_HEAT_PUMP_POWER"
+      domain: "climate"
+      dashboard_prefix: "pm_altherma"
+      shed_in_yellow: true
+      shed_in_red: true
+
+    # P4 - WallBox EV (esempio con switch invertito)
+    - name: "WallBox EV"
+      entity_id: "switch.YOUR_WALLBOX_SWITCH"
+      priority: 4
+      estimated_power: 2200
+      power_sensor: "sensor.YOUR_WALLBOX_POWER"
+      dashboard_prefix: "pm_wallbox"
+      inverted: true  # true se OFF dello switch = carica attiva
+      shed_in_yellow: true
+      shed_in_red: true
+
+    # P5 - Ferro da stiro
+    - name: "Ferro da stiro"
+      entity_id: "switch.YOUR_IRON_SWITCH"
+      priority: 5
+      estimated_power: 2000
+      power_sensor: "sensor.YOUR_IRON_POWER"
+      dashboard_prefix: "pm_ferro"
+      shed_in_yellow: true
+      shed_in_red: true
+
+    # P6 - Asciugatrice (solo in zona rossa, riavvio manuale)
+    - name: "Asciugatrice"
+      entity_id: "switch.YOUR_DRYER_SWITCH"
+      priority: 6
+      estimated_power: 2500
+      power_sensor: "sensor.YOUR_DRYER_POWER"
+      dashboard_prefix: "pm_asciugatrice"
+      shed_in_yellow: false  # NON spegnere in zona gialla
+      shed_in_red: true
+      needs_manual_restart: true  # l'utente deve riavviare il programma
+
+  # =====================================================================
+  # DISPOSITIVI NON CONTROLLABILI (solo monitoraggio)
+  # =====================================================================
+  non_controllable:
+    - name: "Forno"
+      estimated_power: 2500
+      power_sensor: "sensor.YOUR_OVEN_POWER"
+
+    - name: "Piano cottura"
+      estimated_power: 3000
+      power_sensor: "sensor.YOUR_COOKTOP_POWER"
