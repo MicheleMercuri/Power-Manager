@@ -233,19 +233,5 @@ These helpers are created by `packages/power_manager.yaml` and are used by the d
 
 ---
 
-## 🖼️ Screenshots
-
-Create a `docs/` folder and add your screenshots:
-- `docs/overview.png`
-- `docs/devices.png`
-- `docs/settings.png`
-
-Then add them here, e.g.:
-```md
-![Overview](docs/overview.png)
-```
-
----
-
 ## 📄 License
 MIT — see `LICENSE`.
