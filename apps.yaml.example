@@ -38,6 +38,18 @@ power_manager:
   stable_minutes_before_restore: 5
   min_shed_duration: 300
 
+  # --- Coordinamento con altre app (opzionale, v7) ---
+  # Storm Shield: se la carica forzata dell'accumulo era stata avviata
+  # da Storm Shield (allerta o carica notturna) e nel frattempo e' finita,
+  # al restore NON viene riattivata. Metti "" per disattivare.
+  storm_shield_charging_entity: "input_boolean.storm_shield_charging"
+  night_charging_entity: "input_boolean.storm_shield_f3_charging"
+  # EV (es. Tesla DLM): se l'auto e' in carica, al check 3 della zona
+  # gialla Power Manager invia l'evento pm_request_tesla_reduce e attende
+  # ev_reduce_wait secondi prima di spegnere gli elettrodomestici.
+  ev_charge_mode_entity: "input_select.tesla_chargemode_select"
+  ev_reduce_wait: 180
+
   # =====================================================================
   # DISPOSITIVI CONTROLLABILI
   # =====================================================================

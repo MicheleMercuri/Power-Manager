@@ -6,6 +6,7 @@ Designed for the Italian market with native support for **E-Distribuzione Open M
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-41BDF5?logo=home-assistant&logoColor=white)
 ![AppDaemon](https://img.shields.io/badge/AppDaemon-4.x-2ea44f?logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+![Version](https://img.shields.io/badge/version-7.0.0-informational)
 
 ---
 
@@ -14,6 +15,7 @@ Designed for the Italian market with native support for **E-Distribuzione Open M
 Power Manager monitors your **grid consumption (W)** and applies a priority chain:
 
 - **P0 — 🔋 Battery (optional):** progressively reduces forced charging power (step-based)
+- **EV first (optional, v7):** asks the EV charger app to reduce before touching appliances
 - **P1..Pn — Controllable devices:** sheds (turns off) loads by priority
 - **👀 Non-controllable loads:** monitoring-only + “manual action needed” notifications
 
@@ -41,19 +43,26 @@ Power Manager anticipates these behaviors by shedding loads before the meter tri
 
 ---
 
-## ✅ Features (v6)
+## ✅ Features (v7)
 
 ### 🔋 Home battery management (Priority 0, optional)
 - Progressive reduction of forced charge power (`luna_power_step`)
 - Skips instantly if forced charging is not active
 - Dedicated logic to distinguish **grid charging vs PV charging**
 - Adaptive restore: sets charging power to the real available margin
+- **Charge source tracking (v7):** remembers who started the forced charge. If it was [Storm Shield](https://github.com/MicheleMercuri/Huawei-Storm-Shield) (weather alert or night charge) and that charge has already ended when loads are restored, the battery charge is **not** turned back on
+
+### 🚗 EV coordination (v7, optional)
+- At yellow-zone check 3, if an EV is charging (default: `input_select.tesla_chargemode_select` from [Tesla DLM](https://github.com/MicheleMercuri/Tesla-DLM-Charger) is not `Off`), Power Manager fires the `pm_request_tesla_reduce` event (with `excess_watts`) and waits `ev_reduce_wait` seconds (default 180) before shedding appliances
+- If the EV reduction is enough, nothing else is turned off
+- Inactive when the entity doesn't exist, or when the key is set to `""`
 
 ### 🟡🔴 Smart Shedding
 - **Minimum active power** filter (default 100W) to ignore standby
 - Single-step or progressive shedding based on measured excess
 - **Inverted switches** support (e.g., EV wallbox relay logic)
 - `climate` domain support via `set_hvac_mode`
+- `water_heater` support via `turn_off_service` / `turn_on_service`; the `heat_pump` operation mode counts as ON (v7)
 - Notifies non-controllable loads for manual intervention
 
 ### 🔁 Smart Restore (safe & sequential)
@@ -62,6 +71,7 @@ Power Manager anticipates these behaviors by shedding loads before the meter tri
 - Automatic re-shed if a restore step triggers a new overload
 - Progressive backoff (restore interval × number of shed cycles)
 - Maximum shed timeout with forced restore (default 30 min)
+- The “time in zone” sensor resets when the grid goes back to green (v7)
 
 ### 📣 Notifications
 - **Telegram** (direct API, no HA integration required)
@@ -113,8 +123,9 @@ Recommended layout:
 
 ### Hardware / entities
 - A grid power sensor in **Watts** (positive = import/consumption)
-- Controllable loads as `switch.*` and/or `climate.*`
+- Controllable loads as `switch.*`, `climate.*` and/or `water_heater.*`
 - Optional: home battery forced-charge control entities
+- Optional: Storm Shield and/or Tesla DLM for the v7 coordination features
 
 ---
 
@@ -153,6 +164,9 @@ Edit `apps.yaml` and set **all your real entity_ids**.
 ### 4) Dashboard (optional)
 Import/paste `ha_dashboard.yaml` into a Lovelace dashboard.
 
+### Upgrading from v6
+Replace `power_manager.py`. The HA package and the dashboard are unchanged. The new coordination keys are optional: the defaults match the helpers created by Storm Shield and Tesla DLM, and they do nothing if those entities don't exist.
+
 ---
 
 ## ⚙️ AppDaemon configuration (apps.yaml)
@@ -183,6 +197,12 @@ power_manager:
   stable_minutes_before_restore: 5
   min_shed_duration: 300
 
+  # Optional coordination (v7). Set a key to "" to disable it.
+  storm_shield_charging_entity: "input_boolean.storm_shield_charging"
+  night_charging_entity: "input_boolean.storm_shield_f3_charging"
+  ev_charge_mode_entity: "input_select.tesla_chargemode_select"
+  ev_reduce_wait: 180
+
   devices: []
   non_controllable: []
 ```
@@ -198,6 +218,24 @@ Optional fields:
 - `auto_restore`
 - `needs_manual_restart`
 - `turn_off_service`, `turn_on_service`
+
+Example: domestic hot water on a heat pump (`water_heater`):
+```yaml
+    - name: "Hot water"
+      entity_id: "water_heater.YOUR_WATER_HEATER"
+      priority: 4
+      estimated_power: 2000
+      power_sensor: "sensor.YOUR_WATER_HEATER_POWER"
+      domain: "water_heater"
+      dashboard_prefix: "pm_acs"
+      turn_off_service:
+        service: "water_heater/set_operation_mode"
+        data: { entity_id: "water_heater.YOUR_WATER_HEATER", operation_mode: "off" }
+      turn_on_service:
+        service: "water_heater/set_operation_mode"
+        data: { entity_id: "water_heater.YOUR_WATER_HEATER", operation_mode: "heat_pump" }
+```
+A new `dashboard_prefix` needs its own helpers in the package (copy an existing device block and rename it).
 
 ### Non-controllable loads (monitoring-only)
 - `name`, `estimated_power`, `power_sensor`
@@ -230,6 +268,20 @@ These helpers are created by `packages/power_manager.yaml` and are used by the d
 ### Per-device entity configuration (dashboard)
 - `input_text.<prefix>_switch`
 - `input_text.<prefix>_power`
+
+---
+
+## 📝 Changelog
+
+### v7.0.0
+- **Fix:** v6.0.0 did not load in AppDaemon. The module imports were missing and the battery entity defaults were read before being defined. Both are fixed.
+- EV coordination at yellow-zone check 3 (`pm_request_tesla_reduce` event, configurable wait).
+- Battery charge source tracking: no restore of a Storm Shield / night charge that has already ended.
+- “Time in zone” sensor reset when the grid returns to green.
+- `heat_pump` operation mode recognized as ON (water heaters).
+
+### v6.0.0
+- First public release.
 
 ---
 

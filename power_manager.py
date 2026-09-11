@@ -1,6 +1,6 @@
 """
 =============================================================================
-  POWER MANAGER v6 - Gestione Intelligente Carichi Elettrici
+  POWER MANAGER v7 - Gestione Intelligente Carichi Elettrici
   AppDaemon App per Home Assistant
 =============================================================================
 
@@ -13,6 +13,13 @@
 
 =============================================================================
 """
+
+import appdaemon.plugins.hass.hassapi as hass
+import urllib.request
+import json as json_module
+from datetime import datetime
+from enum import Enum
+
 
 class PowerZone(Enum):
     GREEN = "green"
@@ -82,15 +89,37 @@ class PowerManager(hass.Hass):
         # ACCUMULO DOMESTICO (es. Huawei Luna2000)
         # =================================================================
         self.luna_switch = self.args.get(
-            "luna_charge_switch", self.luna_switch
+            "luna_charge_switch", "input_boolean.forcible_charge_switch"
         )
         self.luna_power_slider = self.args.get(
-            "luna_power_slider", self.luna_power_slider
+            "luna_power_slider", "input_number.power_slider"
         )
         self.luna_power_sensor = self.args.get(
-            "luna_power_sensor", self.luna_power_sensor
+            "luna_power_sensor", "sensor.battery_power_dashboard"
         )
         self.luna_power_step = self.args.get("luna_power_step", 100)
+
+        # =================================================================
+        # COORDINAMENTO CON ALTRE APP (opzionale, v7)
+        # =================================================================
+        # Storm Shield: helper che indicano una carica forzata in corso
+        # (protezione allerta / carica notturna). Se chi ha avviato la
+        # carica l'ha gia' conclusa, al restore NON viene riattivata.
+        self.storm_shield_charging_entity = self.args.get(
+            "storm_shield_charging_entity",
+            "input_boolean.storm_shield_charging"
+        )
+        self.night_charging_entity = self.args.get(
+            "night_charging_entity",
+            "input_boolean.storm_shield_f3_charging"
+        )
+        # EV (es. Tesla DLM): se l'auto e' in carica, al check 3 viene
+        # chiesta una riduzione (evento pm_request_tesla_reduce) e si
+        # attendono ev_reduce_wait secondi prima di spegnere i carichi.
+        self.ev_charge_mode_entity = self.args.get(
+            "ev_charge_mode_entity", "input_select.tesla_chargemode_select"
+        )
+        self.ev_reduce_wait = self.args.get("ev_reduce_wait", 180)
 
         # =================================================================
         # ANTI PING-PONG
@@ -129,6 +158,7 @@ class PowerManager(hass.Hass):
         self.luna_was_charging = False
         self.luna_pre_shed_power = 0.0
         self.luna_reduced = False
+        self.luna_charge_source = ""  # "storm_shield", "night_charge", "manual"
 
         # Timer zona gialla
         self.yellow_check2_timer = None
@@ -166,7 +196,7 @@ class PowerManager(hass.Hass):
         max_shed_t = self._get_max_shed_time()
 
         self.log("=" * 65)
-        self.log("POWER MANAGER v6 INIZIALIZZATO")
+        self.log("POWER MANAGER v7 INIZIALIZZATO")
         self.log(f"  Sensore:        {self.power_sensor}")
         self.log(f"  Contratto:      {self.contract_power:.0f} W")
         self.log(f"  Disponibile:    {self.available_power:.0f} W (110%)")
@@ -188,6 +218,8 @@ class PowerManager(hass.Hass):
         luna_ok = "SI" if self.entity_exists(
             self.luna_switch) else "NO"
         self.log(f"  Luna2000:       {luna_ok}")
+        self.log(f"  Coord. EV:      "
+                 f"{self.ev_charge_mode_entity or 'disattivato'}")
         self.log("  Priorita:")
         self.log("    P0: Luna2000 (riduzione/stop carica)")
         for d in sorted(self.devices, key=lambda x: x.priority):
@@ -449,6 +481,18 @@ class PowerManager(hass.Hass):
             self._cancel_yellow_timers()
             self._stop_ha_timer()
             self._stop_realtime_timer()
+            self.zone_entry_time = None
+            self.set_state(
+                "sensor.pm_elapsed_time",
+                state="00:00",
+                attributes={
+                    "friendly_name": "PM Tempo in zona",
+                    "icon": "mdi:timer-outline",
+                    "zone": "green",
+                    "elapsed_seconds": 0,
+                    "elapsed_minutes": 0,
+                }
+            )
             self.current_check = None
             self.came_from_yellow = False
             if self.shed_active:
@@ -577,7 +621,8 @@ class PowerManager(hass.Hass):
         if device.inverted:
             return s in ("off",)
         return s in ("on", "heat", "cool", "auto", "heat_cool",
-                      "fan_only", "dry", "performance", "eco", "electric")
+                      "fan_only", "dry", "performance", "eco", "electric",
+                      "heat_pump")
 
     def _shed_device(self, device):
         if not device.enabled or not device.controllable:
@@ -793,6 +838,10 @@ class PowerManager(hass.Hass):
             self.luna_was_charging = True
             self.luna_pre_shed_power = self._luna_get_configured_power()
             self.luna_reduced = True
+            self.luna_charge_source = self._luna_detect_source()
+            self.log(f"  LUNA2000: salvo stato pre-shed "
+                     f"(fonte: {self.luna_charge_source}, "
+                     f"potenza: {self.luna_pre_shed_power:.0f}W)")
 
         configured = self._luna_get_configured_power()
 
@@ -840,6 +889,24 @@ class PowerManager(hass.Hass):
                 f"servono ancora {excess_watts - actual_power:.0f}W")
             return actual_power
 
+    def _luna_detect_source(self):
+        """
+        Identifica chi ha avviato la carica forzata, per decidere al
+        restore se riattivarla: "storm_shield" (protezione allerta),
+        "night_charge" (carica notturna) o "manual".
+        """
+        if self._is_on(self.storm_shield_charging_entity):
+            return "storm_shield"
+        if self._is_on(self.night_charging_entity):
+            return "night_charge"
+        return "manual"
+
+    def _is_on(self, entity_id):
+        """True se l'entity e' configurata, esiste ed e' 'on'."""
+        if not entity_id or not self.entity_exists(entity_id):
+            return False
+        return self.get_state(entity_id) == "on"
+
     def _luna_set_power(self, watts):
         """Imposta la potenza di carica Luna2000."""
         if self.dry_run:
@@ -884,6 +951,26 @@ class PowerManager(hass.Hass):
         if not self.luna_reduced or not self.luna_was_charging:
             return
 
+        # v7: se chi ha avviato la carica l'ha gia' conclusa, non riattivarla
+        if self.luna_charge_source in ("storm_shield", "night_charge"):
+            entity = (self.storm_shield_charging_entity
+                      if self.luna_charge_source == "storm_shield"
+                      else self.night_charging_entity)
+            if not self._is_on(entity):
+                motivo = ("Storm Shield ha disattivato la protezione."
+                          if self.luna_charge_source == "storm_shield"
+                          else "Carica notturna gia' terminata.")
+                self.log(f"  LUNA2000: {motivo} NON ripristino")
+                self._notify_telegram(
+                    f"*Power Manager:* 🔋 Luna2000 carica NON ripristinata\n"
+                    f"{motivo}")
+                self.luna_reduced = False
+                self.luna_was_charging = False
+                self.luna_pre_shed_power = 0.0
+                self.luna_charge_source = ""
+                return
+        # "manual": ripristina sempre (l'utente l'ha chiesta)
+
         current_power = self._get_grid_power()
         margin = self.green_threshold - current_power
         # Arrotonda per difetto a step 100W
@@ -896,6 +983,7 @@ class PowerManager(hass.Hass):
                      f"(originale: {self.luna_pre_shed_power:.0f}W)")
             self.luna_reduced = False
             self.luna_was_charging = False
+            self.luna_charge_source = ""
             return
 
         if margin <= 200:
@@ -909,6 +997,7 @@ class PowerManager(hass.Hass):
             self.luna_reduced = False
             self.luna_was_charging = False
             self.luna_pre_shed_power = 0.0
+            self.luna_charge_source = ""
             return
 
         # Calcola potenza di restore: minimo tra originale e margine
@@ -950,6 +1039,7 @@ class PowerManager(hass.Hass):
         self.luna_reduced = False
         self.luna_was_charging = False
         self.luna_pre_shed_power = 0.0
+        self.luna_charge_source = ""
 
     # =====================================================================
     # SMART SHED v6
@@ -1052,6 +1142,7 @@ class PowerManager(hass.Hass):
                     self.luna_was_charging = True
                     self.luna_pre_shed_power = self._luna_get_configured_power()
                     self.luna_reduced = True
+                    self.luna_charge_source = self._luna_detect_source()
                 self._luna_stop_charging()
                 if "Luna2000" not in str(shed_names):
                     shed_names.append(f"Luna2000 (-{luna_pw:.0f}W)")
@@ -1114,7 +1205,47 @@ class PowerManager(hass.Hass):
             self._publish_state()
             return
 
+        # v7: coordinamento EV. Se l'auto e' in carica, chiedi prima una
+        # riduzione e ricontrolla dopo ev_reduce_wait secondi.
+        if self._is_ev_charging():
+            excess = power - self.shed_target
+            self.log("  EV in carica: richiedo riduzione prima dello shed")
+            self.fire_event("pm_request_tesla_reduce", excess_watts=excess)
+            self._notify_telegram(
+                f"*Power Manager:* 🟡 Check 3, EV in carica\n"
+                f"Supero: {pct:.0f}% ({power:.0f}W)\n"
+                f"Richiesta riduzione EV, attendo "
+                f"{self.ev_reduce_wait / 60:.0f} min prima di spegnere "
+                f"altri carichi")
+            self.run_in(self._yellow_check3_after_ev, self.ev_reduce_wait)
+            self._publish_state()
+            return
+
         excess = power - self.shed_target
+        self._yellow_check3_do_shed(power, pct, excess)
+
+    def _yellow_check3_after_ev(self, kwargs):
+        """Dopo la richiesta di riduzione all'EV, verifica se serve shed."""
+        if self.current_zone != PowerZone.YELLOW:
+            return
+        power = self._get_grid_power()
+        pct = self._calc_excess_percent(power)
+
+        if power <= self.shed_target:
+            self.log("  Post-EV: rientrato sotto target, nessun shed")
+            self._notify_telegram(
+                f"*Power Manager:* 🟡 ✅ Riduzione EV sufficiente\n"
+                f"Rete: {power:.0f}W, sotto target: nessuno spegnimento")
+            self._publish_state()
+            return
+
+        self.log(f"  Post-EV: ancora sopra target ({power:.0f}W), "
+                 f"procedo con lo shed")
+        excess = power - self.shed_target
+        self._yellow_check3_do_shed(power, pct, excess)
+
+    def _yellow_check3_do_shed(self, power, pct, excess):
+        """Esegue lo shed effettivo del check 3."""
         shed_names = self._smart_shed(excess, include_all=False)
         nc_active = self._get_non_controllable_power()
 
@@ -1132,6 +1263,14 @@ class PowerManager(hass.Hass):
 
         self._schedule_yellow_recheck()
         self._publish_state()
+
+    def _is_ev_charging(self):
+        """True se l'EV e' in carica (select modalita' di carica != Off)."""
+        entity = self.ev_charge_mode_entity
+        if not entity or not self.entity_exists(entity):
+            return False
+        mode = self.get_state(entity)
+        return mode not in (None, "", "Off", "off", "unknown", "unavailable")
 
     def _yellow_recheck_callback(self, kwargs):
         if self.current_zone != PowerZone.YELLOW:
